@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments/common :: head('게시글 등록')}"></head>
+
+<body>
+    <header th:replace="~{fragments/common :: header}"></header>
+
+    <main class="container">
+        <div class="form-card">
+            <div class="form-header">
+                <h3>새로운 의뢰 게시글 등록</h3>
+            </div>
+
+            <form th:action="@{/board/register}" method="post" class="styled-form">
+                <input type="hidden" name="postStatus" value="ON">
+
+                <div class="form-group">
+                    <label>제목</label>
+                    <input type="text" name="title" placeholder="게시글 제목을 입력하세요" required>
+                </div>
+
+                <div class="form-group">
+                    <label>카테고리</label>
+                    <select name="category">
+                        <option value="디자인">디자인</option>
+                        <option value="일러스트">일러스트</option>
+                        <option value="영상">영상</option>
+                        <option value="음향">음향</option>
+                        <option value="기타">기타</option>
+                        <option value="구해요">구해요</option>
+
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>기본 가격 (원)</label>
+                    <input type="number" name="basePrice" placeholder="예: 50000" required>
+                </div>
+
+                <div class="form-group">
+                    <label>해시태그</label>
+                    <input type="text" name="hashtag" placeholder="#캐릭터 #일러스트 (공백으로 구분)">
+                </div>
+
+                <div class="form-group">
+                    <label>게시글 상세 내용</label>
+                    <textarea name="content" placeholder="게시글에 대한 설명을 적으세요" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>의뢰 내용 설정</label>
+                    <div id="question-fields">
+                        <div class="question-set"
+                            style="border: 1px solid #a48ad1; padding: 15px; border-radius: 8px; margin-bottom: 15px; position: relative;">
+                            <button type="button" class="btn-del" onclick="removeField(this)"
+                                style="position: absolute; top: 10px; right: 10px; background: none; border: none; cursor: pointer; color: #94a3b8;">✕</button>
+
+                            <div style="margin-bottom: 8px;">
+                                <input type="text" name="questionTitles" placeholder="질문 제목을 입력하세요" required>
+                            </div>
+                            <div>
+                                <textarea name="questionDescriptions" placeholder="상세 설명을 입력하세요"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-add" onclick="addField()">+ 질문 추가</button>
+
+                    <button type="submit" class="btn-submit-action">게시글 등록하기</button>
+            </form>
+        </div>
+    </main>
+
+
+
+
+    <footer th:replace="~{fragments/common :: footer}"></footer>
+</body>
+
+</html>
+
+
+<!--TML의 DOM 조작(JavaScript)을 사용해서 상세입력 칸 늘리기 -->
+<script>
+    function addField() {
+        const container = document.getElementById('question-fields');
+        const div = document.createElement('div');
+        div.className = 'question-set';
+        // 박스 스타일과 위치 설정
+        div.style.cssText = 'border: 1px solid #c4b5fd; padding: 15px; border-radius: 8px; margin-bottom: 15px; position: relative; background-color: #fcfcfd;';
+
+        div.innerHTML = `
+            <button type="button" class="btn-del" onclick="removeField(this)" 
+                    style="position: absolute; top: 10px; right: 10px; background: none; border: none; cursor: pointer; color: #94a3b8; font-size: 1.2rem;">✕</button>
+            
+            <div style="margin-bottom: 8px;">
+                <input type="text" name="questionTitles" placeholder="질문 제목을 입력하세요" required>
+            </div>
+            <div>
+                <textarea name="questionDescriptions" placeholder="상세 설명을 입력하세요"></textarea>
+            </div>
+        `;
+        container.appendChild(div);
+    }
+
+    function removeField(btn) {
+        // .question-set 개수를 세서 최소 1개는 남기도록 함
+        const sets = document.querySelectorAll('.question-set');
+        if (sets.length > 1) {
+            btn.parentElement.remove(); // 버튼의 부모(div.question-set)를 삭제
+        } else {
+            alert("최소 한 개의 질문 항목은 필요합니다.");
+        }
+    }
+</script>

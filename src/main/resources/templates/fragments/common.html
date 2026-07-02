@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<body>
+
+    <head th:fragment="head(title)">
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title th:text="${title}">사이드 프로젝트</title>
+        <link rel="stylesheet" th:href="@{/css/style.css}">
+        <!-- 스프링 시큐리티 CSRF 토큰 
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    -->
+
+        <!-- 포트원 SDK -->
+        <script src="https://cdn.iamport.kr/v1/iamport.js"></script>
+    </head>
+
+
+    <header th:fragment="header" class="site-header">
+        <div class="container header-inner">
+            <a th:href="@{/board/list}" class="logo">MAIN</a>
+
+            <form th:action="@{/board/list}" method="GET" class="search-form">
+                <input type="search" name="keyword" placeholder="게시글 검색">
+                <button type="submit">검색</button>
+            </form>
+
+
+            <!-- security Context : 인증 정보를 관리하는 객체 -->
+            <!-- 대조 로그인 로그아웃 전부 시큐리티가 처리 -->
+            <div class="nav-menu" sec:authorize="isAnonymous()"> <!-- 익명(로그아웃 상태)인 경우 -->
+                <a th:href="@{/account/register}">회원가입</a>
+                <a th:href="@{/auth/login}">로그인</a>
+            </div>
+            <!-- 인증된 사용자 (로그인 상태)인 경우-->
+            <ul class="nav-menu" sec:authorize="isAuthenticated()" style="list-style:none; padding:0; margin:0;">
+                <li>
+                    <div class="user-menu-container">
+                        <div class="user-name" onclick="toggleMenu()" th:text="${nickname} + '님 ▼'"
+                            style="cursor:pointer;">
+                            닉네임님
+                        </div>
+
+                        <div id="userDropdown" class="dropdown-menu">
+                            <a href="/mypage">마이페이지</a>
+                            <a href="/order/list">의뢰 관리</a>
+
+                            <form th:action="@{/logout}" method="post" style="margin: 0;">
+                                <button type="submit" class="logout-btn">로그아웃</button>
+                            </form>
+                        </div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+        <script>
+            // 닉네임 클릭 시 드롭다운 열기/닫기
+            function toggleMenu() {
+                document.getElementById("userDropdown").classList.toggle("show");
+            }
+
+            // 화면의 다른 곳을 클릭하면 열려있던 메뉴 닫기
+            window.onclick = function (event) {
+                if (!event.target.closest('.user-name')) {
+                    var dropdowns = document.getElementsByClassName("dropdown-menu");
+                    for (var i = 0; i < dropdowns.length; i++) {
+                        dropdowns[i].classList.remove('show');
+                    }
+                }
+            }
+        </script>
+
+    </header>
+
+    <footer th:fragment="footer" class="site-footer">
+        <div class="container">
+            <p>&copy; 2026 My Side Project. All rights reserved.</p>
+        </div>
+    </footer>
+    <script>
+        // 닉네임 클릭 시 드롭다운 열기/닫기
+        function toggleMenu() {
+            document.getElementById("userDropdown").classList.toggle("show");
+        }
+
+        // 화면의 다른 곳을 클릭하면 열려있던 메뉴 닫기
+        window.onclick = function (event) {
+            if (!event.target.closest('.user-name')) {
+                var dropdowns = document.getElementsByClassName("dropdown-menu");
+                for (var i = 0; i < dropdowns.length; i++) {
+                    dropdowns[i].classList.remove('show');
+                }
+            }
+        }
+    </script>
+</body>
+
+</html>

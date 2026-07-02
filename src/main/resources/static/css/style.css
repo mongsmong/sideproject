@@ -1,0 +1,1317 @@
+/* 
+==================
+Common
+================== 
+*/
+
+
+
+/* --- 기본 리셋 --- */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+    color: #333;
+    line-height: 1.6;
+    background-color: #fdfdfd;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+/* --- 전체 화면 중앙 정렬 규격 --- */
+.container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* --- 공통 HEADER --- */
+.site-header {
+    background: #ffffff;
+    border-bottom: 1px solid #eaeaea;
+    padding: 18px 0;
+    margin-bottom: 35px;
+}
+
+.header-inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: #2563eb; /* 파란색 포인트 */
+}
+
+.search-form {
+    display: flex;
+    gap: 6px;
+}
+
+.search-form input {
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    width: 220px;
+    outline: none;
+}
+
+.search-form input:focus {
+    border-color: #2563eb;
+}
+
+.search-form button {
+    padding: 8px 14px;
+    background-color: #f3f4f6;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.search-form button:hover {
+    background-color: #e5e7eb;
+}
+
+.nav-menu {
+    display: flex;
+    list-style: none;
+    gap: 20px;
+    align-items: center;
+    font-size: 0.95rem;
+}
+
+.nav-menu .point-link {
+    color: #2563eb;
+    font-weight: 700;
+}
+
+/* 토글 메뉴 컨테이너 */
+.user-menu-container {
+    position: relative;
+    display: inline-block;
+}
+
+/* 드롭다운 메뉴 (기본 숨김) */
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    right: 0;
+    background-color: #f9f9f9;
+    min-width: 120px;
+    box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
+    z-index: 1000; /* 화면에서 다른 요소에 가려지지 않도록 1000으로 수정 */
+    border-radius: 5px;
+}
+
+/* 드롭다운 안의 a태그 및 로그아웃 버튼 */
+.dropdown-menu a, .dropdown-menu .logout-btn {
+    display: block;
+    padding: 10px;
+    text-decoration: none;
+    color: black;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    font-size: 16px; /* 폰트 크기 통일 */
+}
+
+/* 마우스 호버(올렸을 때) 효과 */
+.dropdown-menu a:hover, .dropdown-menu .logout-btn:hover {
+    background-color: #ddd;
+}
+
+/* JS로 활성화될 때 보여줌 */
+.show {
+    display: block;
+}
+
+
+/* 로그아웃 */
+.logout-form {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* 이름과 버튼 사이 간격 */
+    margin: 0;
+}
+
+/* 사용자 이름 스타일 */
+.user-name {
+    font-weight: 600;
+    color: #333;
+}
+
+/* 로그아웃 버튼 스타일 (링크처럼 보이게) */
+/* 기존 코드 대신 이걸로 덮어쓰기 */
+.logout-btn {
+    background: none !important;
+    border: none !important;
+    padding: 0 !important;
+    color: #666 !important;
+    font-size: 0.95rem !important;
+    cursor: pointer !important;
+    font-family: inherit !important; /* 폰트도 통일 */
+}
+
+/* 마우스 올렸을 때 효과 */
+.logout-btn:hover {
+    color: #2563eb !important;
+    text-decoration: underline !important;
+}
+
+
+/* --- 공통 FOOTER --- */
+.site-footer {
+    margin-top: 100px;
+    padding: 30px 0;
+    border-top: 1px solid #eaeaea;
+    text-align: center;
+    font-size: 0.85rem;
+    color: #888;
+}
+
+/*
+==================
+게시글 목록 (board/list)
+==================
+*/
+.board-top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.board-top-bar h3 {
+    font-size: 1.3rem;
+    color: #1e293b;
+    font-weight: 700;
+}
+
+.btn-write {
+    background-color: #7c3aed;
+    color: #ffffff;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+.btn-write:hover {
+    background-color: #6d28d9;
+}
+
+/* --- 게시글 카드 그리드 --- */
+.board-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+.board-card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.board-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
+}
+
+.card-img {
+    width: 100%;
+    height: 180px;
+    background-color: #f1f5f9;
+    overflow: hidden;
+}
+
+.card-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.card-info {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.card-info .title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 8px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sub-info {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    font-size: 0.85rem;
+    margin-bottom: 6px;
+}
+
+.sub-info .price {
+    font-weight: 800;
+    color: #7c3aed;
+}
+
+.sub-info .category {
+    color: #64748b;
+    background: #f1f5f9;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.78rem;
+}
+
+.hashtag {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    margin-bottom: 16px;
+}
+
+.writer {
+    margin-top: auto;
+    text-align: right;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #475569;
+}
+
+/* --- 페이징 --- */
+.pagination-wrap {
+    margin-top: 30px;
+    display: flex;
+    justify-content: center;
+}
+
+.pagination {
+    list-style: none;
+    display: flex;
+    gap: 6px;
+    padding: 0;
+}
+
+.pagination a {
+    display: block;
+    padding: 8px 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    color: #475569;
+    background: #ffffff;
+}
+
+.pagination a:hover {
+    background-color: #f8fafc;
+}
+
+.pagination a.active {
+    background-color: #7c3aed;
+    color: #ffffff;
+    border-color: #7c3aed;
+    font-weight: bold;
+}
+
+
+/* ==================
+info 타임라인
+================== 
+*/
+.timeline-wrap {
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid #e2e8f0;
+}
+
+.timeline {
+    position: relative;
+    margin-top: 14px;
+    padding-left: 24px;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 5px;
+    top: 4px;
+    bottom: 4px;
+    width: 2px;
+    background: #e2e8f0;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 22px;
+}
+
+.timeline-item:last-child {
+    margin-bottom: 0;
+}
+
+.timeline-dot {
+    position: absolute;
+    left: -24px;
+    top: 4px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #7c3aed;
+}
+
+.timeline-dot.dot-purple {
+    background: #7c3aed;
+}
+
+.timeline-dot.dot-green {
+    background: #16a34a;
+}
+
+.timeline-dot.dot-red {
+    background: #dc2626;
+}
+
+.timeline-label {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: #1e293b;
+    margin-bottom: 4px;
+}
+
+.timeline-text {
+    font-size: 0.9rem;
+    color: #475569;
+    margin-bottom: 6px;
+    white-space: pre-wrap;
+}
+
+.timeline-files a {
+    display: block;
+    font-size: 0.85rem;
+    color: #7c3aed;
+    margin-bottom: 4px;
+    text-decoration: underline;
+}
+
+.timeline-time {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    margin-bottom: 0;
+}
+
+.timeline-dot.dot-pending {
+    background: #f1f5f9;
+    border: 2px solid #cbd5e1;
+}
+
+
+/* ==================
+의뢰 게시판 메인 검색창 (헤더 충돌 방지)
+================== 
+*/
+.search-wrap {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px 20px 50px; 
+    background-color: transparent;
+}
+
+/* 오직 search-wrap 안에 있는 search-form만 알약 모양으로 변경! */
+.search-wrap .search-form {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    max-width: 650px;
+    height: 54px;
+    background-color: #ffffff;
+    border: 1.5px solid #d1d5db;
+    border-radius: 30px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    margin: 0;
+    gap: 0; /* 헤더 폼의 gap 속성 무력화 */
+}
+
+/* 마우스 올렸을 때 파란색 테두리 효과 */
+.search-wrap .search-form:focus-within,
+.search-wrap .search-form:hover {
+    border-color: #2563eb; 
+    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.12);
+}
+
+.search-wrap .category-select {
+    flex-shrink: 0;
+    height: 100%;
+    padding: 0 15px 0 25px;
+    font-family: inherit; 
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #374151; 
+    background-color: transparent;
+    border: none;
+    outline: none;
+    cursor: pointer;
+}
+
+/* 카테고리 셀렉트 박스 클릭 시 생기는 검은 테두리 제거 */
+.search-wrap .category-select:focus {
+    outline: none;
+}
+
+.search-wrap .input-box {
+    display: flex;
+    align-items: center;
+    flex-grow: 1;
+    height: 100%; 
+    position: relative; 
+}
+
+/* 세로 구분선 */
+.search-wrap .input-box::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 1px;
+    height: 24px; 
+    background-color: #e5e7eb;
+}
+
+/* 텍스트 입력창 (헤더 CSS 무력화) */
+.search-wrap .search-input {
+    flex-grow: 1;
+    width: 100% !important; 
+    height: 100%;
+    padding: 0 10px 0 20px !important; 
+    font-family: inherit;
+    font-size: 1rem !important;
+    color: #333333;
+    border: none !important;
+    outline: none !important;
+    background-color: transparent;
+}
+
+.search-wrap .search-input::placeholder {
+    color: #9ca3af; 
+}
+
+/* 돋보기 버튼 (헤더 CSS 무력화) */
+.search-wrap .search-btn {
+    flex-shrink: 0; 
+    width: 50px !important;
+    height: 100%;
+    background-color: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #6b7280;
+    font-size: 1.1rem;
+    padding: 0 20px 0 0 !important;
+    transition: color 0.2s ease;
+    font-weight: normal !important;
+}
+
+.search-wrap .search-btn:hover {
+    color: #2563eb !important; 
+    background-color: transparent !important; 
+}
+
+/*
+==================
+해시태그 영역 (board/detail)
+==================
+*/
+
+.popular-hashtags-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 20px;
+    margin-bottom: 40px;
+    gap: 10px;
+}
+
+.hashtag-title {
+    font-size: 0.9rem;
+    color: #6b7280;
+    font-weight: 600;
+}
+
+.hashtag-list {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+}
+
+.hashtag-item {
+    padding: 6px 14px;
+    background-color: #f3f4f6;
+    color: #374151;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    text-decoration: none;
+    transition: all 0.2s;
+    border: 1px solid #e5e7eb;
+}
+
+.hashtag-item:hover {
+    background-color: #2563eb;
+    color: white;
+    border-color: #2563eb;
+}
+
+
+
+
+/*
+==================
+게시글 상세 (board/detail)
+==================
+*/
+.detail-card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 36px 32px;
+    max-width: 720px;
+    margin: 0 auto;
+}
+
+.detail-header {
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 20px;
+    margin-bottom: 28px;
+}
+
+.category-badge {
+    display: inline-block;
+    background-color: #f1f5f9;
+    color: #475569;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.detail-header h2 {
+    font-size: 1.5rem;
+    color: #1e293b;
+    font-weight: 800;
+    margin-bottom: 14px;
+}
+
+.price-box {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: #2563eb;
+}
+
+.detail-body {
+    margin-bottom: 40px;
+}
+
+.detail-body h4 {
+    font-size: 1rem;
+    color: #334155;
+    margin-bottom: 12px;
+}
+
+.content-box {
+    background-color: #f8fafc;
+    border-radius: 8px;
+    padding: 24px;
+    min-height: 220px;
+    line-height: 1.7;
+    color: #334155;
+    white-space: pre-wrap;
+}
+
+.detail-actions {
+    display: flex;
+    gap: 10px;
+}
+/* 버튼들을 가로로 배치하고 사이 간격을 띄움 */
+.button-group {
+    display: flex;
+    gap: 15px; /* 버튼 사이 띄우기! */
+    margin-top: 20px;
+}
+
+/* 파란색 신청하기 버튼 */
+.btn-blue {
+    padding: 12px 24px;
+    background-color: #2563eb;
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: bold;
+}
+.btn-blue:hover {
+    background-color: #1d4ed8;
+}
+
+/* 회색 목록으로 버튼 */
+.btn-gray {
+    padding: 12px 24px;
+    background-color: #f1f5f9;
+    color: #475569;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: bold;
+}
+.btn-gray:hover {
+    background-color: #e2e8f0;
+}
+
+
+/*
+==================
+주문 신청 폼 (order/create) 
+==================
+*/
+
+.form-card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 32px 28px;
+    max-width: 620px;
+    margin: 0 auto;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03);
+}
+
+.form-header {
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 16px;
+    margin-bottom: 24px;
+}
+
+.form-header h3 {
+    font-size: 1.3rem;
+    color: #1e293b;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.form-header p {
+    font-size: 0.88rem;
+    color: #64748b;
+}
+
+.styled-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* 1. 모든 입력창 공통 디자인 (한 번만 설정) */
+.form-group input[type="text"],
+.form-group input[type="number"],
+.form-group input[type="date"],
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #c4b5fd; /* 보라색 테두리 */
+    border-radius: 8px;
+    font-size: 0.95rem;
+    outline: none;
+    transition: all 0.2s;
+}
+
+/* 2. 포커스(클릭) 시 공통 효과 */
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    border-color: #7c3aed;
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+}
+
+/* 3. 항목별 특수 설정 (이런 것만 개별로 적어줘) */
+.form-group textarea {
+    height: 180px;
+    resize: vertical;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 20px; /* 항목 간 간격 */
+}
+
+.form-group label {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: #926ed1;
+}
+
+/* 질문 세트 전체 레이아웃 */
+.question-set {
+    background-color: #fcfcfd;
+}
+
+/* 폼 디자인 통합 적용 (아까 통합한 코드에 이어서) */
+.question-set input[type="text"],
+.question-set textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #a29eaf;
+    border-radius: 6px;
+}
+
+/* 삭제 버튼 스타일 */
+.btn-del {
+    font-size: 1.2rem;
+    padding: 0 5px;
+}
+.btn-del:hover { color: #ef4444 !important; }
+
+.btn-submit-action {
+    width: 100%;
+    padding: 14px;
+    background-color: #7c3aed;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.btn-submit-action:hover {
+    background-color: #6d28d9;
+}
+
+.btn-cancel {
+    width: 100%;
+    padding: 12px;
+    background-color: #ffffff;
+    color: #64748b;
+    border: 1px solid #b1b7be;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: center;
+}
+
+.btn-cancel:hover {
+    background-color: #f8fafc;
+}
+
+/* 금액 조절 버튼 없애기
+   크롬, 사파리, 엣지 */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+
+/*
+==================
+의뢰 수락 order/info
+==================
+*/
+
+/* --- 의뢰서 확인 페이지 (order/info.html) 스타일 --- */
+
+/* 카드 레이아웃 */
+.info-card {
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    padding: 24px;
+    max-width: 600px;
+    margin: 20px auto;
+}
+
+.info-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #f1f5f9;
+    padding-bottom: 15px;
+}
+
+.status-badge {
+    background: #e0f2fe;
+    color: #0369a1;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+/* 정보 행 (라벨 : 값) */
+.info-row {
+    display: flex;
+    padding: 10px 0;
+}
+
+.label {
+    width: 120px;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.value {
+    color: #1e293b;
+    font-weight: 500;
+}
+
+/* 상세 요구사항 박스 */
+.req-box {
+    margin-top: 20px;
+    padding: 15px;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}
+
+.label-title {
+    font-weight: 600;
+    color: #475569;
+    margin-bottom: 10px;
+}
+
+.req-content {
+    line-height: 1.6;
+    color: #334155;
+    white-space: pre-wrap; /* 줄바꿈 유지 */
+}
+
+/* 수정 폼 영역 */
+.action-section {
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 2px solid #f1f5f9;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+    color: #334155;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    box-sizing: border-box;
+}
+
+/* 버튼 디자인 */
+.btn-primary {
+    width: 100%;
+    padding: 12px;
+    background: #2563eb;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.btn-primary:hover {
+    background: #1d4ed8;
+}
+
+.btn-group {
+    text-align: center;
+    margin-top: 20px;
+}
+
+
+.btn-sub:hover {
+    background: #cbd5e1;
+}
+
+/*
+==================
+채팅 리스트 목록
+==================
+*/
+.chat-list {
+    display: flex;
+    flex-direction: column;
+    border-top: 1px solid #e5e7eb;
+    margin-top: 15px;
+}
+
+.chat-room-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 16px 8px;
+    border-bottom: 1px solid #e5e7eb;
+    transition: background-color 0.1s ease;
+}
+
+.chat-room-item:hover {
+    background-color: #f8fafc;
+}
+
+.room-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.room-top .nickname {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: #1e293b;
+}
+
+.room-top .time {
+    font-size: 0.75rem;
+    color: #94a3b8;
+}
+
+/* 말줄임표(...) 핵심 적용 파트 */
+.last-msg {
+    width: 100%;
+    font-size: 0.88rem;
+    color: #64748b;
+    
+    white-space: nowrap;       /* 줄바꿈 금지 */
+    overflow: hidden;          /* 영역 넘어가면 숨김 */
+    text-overflow: ellipsis;   /* 넘친 글자는 ... 처리 */
+}
+
+
+
+/*
+==================
+메시지창
+==================
+*/
+
+.chat-bg {
+    background-color: #f5f6f8;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    height: 520px;
+    padding: 24px 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.msg-row {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.msg-row.other {
+    align-items: flex-start;
+}
+
+.msg-row.my {
+    align-items: flex-end;
+}
+
+.sender-name {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #374151;
+    margin-bottom: 6px;
+}
+
+.bubble-box {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    max-width: 75%;
+}
+
+.bubble {
+    padding: 10px 14px;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    word-break: break-all;
+}
+
+.msg-row.other .bubble {
+    background-color: #ffffff;
+    color: #111827;
+    border: 1px solid #e5e7eb;
+}
+
+.msg-row.my .bubble {
+    background-color: #ede6f6;
+    color: #111827;
+}
+
+.time {
+    font-size: 0.7rem;
+    color: #9ca3af;
+    margin-bottom: 2px;
+    flex-shrink: 0;
+}
+
+/* 입력 바 */
+.send-bar {
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+    align-items: center;
+}
+
+.input-wrap {
+    flex: 1;
+    background: #ffffff;
+    border: 1px solid #d1d5db;
+    border-radius: 20px;
+    padding: 6px 18px;
+    display: flex;
+}
+
+.input-wrap input {
+    width: 100%;
+    border: none;
+    outline: none;
+    font-size: 0.95rem;
+}
+
+.btn-send {
+    width: 42px;
+    height: 42px;
+    background-color: #7c3aed;
+    color: #ffffff;
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.btn-send:hover {
+    background-color: #6d28d9;
+}
+
+.btn-sub {
+    padding: 8px 14px;
+    background: #f3f4f6;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    color: #374151;
+}
+
+
+/*
+==================
+결제 요청 / 취소 카드 (order/detail 채팅 내)
+==================
+*/
+.pay-card-wrap {
+    width: 100%;
+}
+
+.pay-card-title {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #334155;
+    margin-bottom: 6px;
+    line-height: 1.4;
+}
+
+.pay-card-title-ellipsis {
+    display: inline-block;
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: bottom;
+    font-weight: 600;
+}
+
+.pay-card-amount {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #7c3aed;
+    margin-bottom: 6px;
+}
+
+.pay-card-waiting {
+    font-size: 0.85rem;
+    color: #94a3b8;
+    margin-bottom: 0;
+}
+
+.pay-card-time {
+    font-size: 0.75rem;
+    color: #aaaaaa;
+    margin-top: 10px;
+    margin-bottom: 0;
+}
+
+.paid-card {
+    border-color: #86efac;
+}
+
+.paid-card-text {
+    color: #16a34a;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.cancel-card {
+    border-color: #fca5a5;
+}
+
+.cancel-card-text {
+    color: #dc2626;
+    margin-bottom: 6px;
+}
+
+.cancel-card-time {
+    font-size: 0.75rem;
+    color: #aaaaaa;
+    margin-bottom: 0;
+}
+
+/*
+==================
+버튼 비활성화 상태 (결제완료 후 결제요청/거절 버튼 잠금)
+==================
+*/
+.btn-primary.btn-disabled {
+    background: #cbd5e1;
+    color: #64748b;
+    cursor: not-allowed;
+}
+
+.btn-primary.btn-disabled:hover {
+    background: #cbd5e1;
+}
+
+.btn-sub.btn-disabled {
+    background: #f1f5f9;
+    color: #94a3b8;
+    border-color: #e2e8f0;
+    cursor: not-allowed;
+}
+
+.btn-sub.btn-disabled:hover {
+    background: #f1f5f9;
+}
+
+/*
+==================
+order/info 액션 버튼 가로 배치
+==================
+*/
+.action-btn-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.action-btn-row form {
+    margin: 0;
+}
+
+
+
+
+/*
+==================
+시스템 안내 박스
+==================
+*/
+.system-notice-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 24px;
+    margin: 40px auto;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    text-align: center;
+}
+
+.notice-text {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #334155;
+    margin-bottom: 16px;
+    line-height: 1.4;
+}
+
+.notice-text span {
+    font-weight: 700;
+    color: #7c3aed; /* 보라색 포인트 */
+}
+
+/* 안내창 내부 버튼 */
+.btn-notice-action {
+    background-color: #7c3aed;
+    color: #ffffff;
+    border: none;
+    border-radius: 20px;
+    padding: 8px 20px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.btn-notice-action:hover {
+    background-color: #6d28d9;
+}
+
+
+

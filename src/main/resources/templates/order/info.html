@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments/common :: head('의뢰서 확인')}"></head>
+
+<body>
+    <header th:replace="~{fragments/common :: header}"></header>
+
+    <main class="container">
+        <div class="info-card">
+            <div class="info-header">
+                <h3>작업 의뢰서</h3>
+                <span class="status-badge" th:text="${order.orderStatus}"></span>
+            </div>
+
+            <div class="info-body">
+                <div class="info-row">
+                    <span class="label">주문 번호</span>
+                    <span class="value" th:text="${order.orderId}"></span>
+                </div>
+                <div class="info-row">
+                    <span class="label">게시글 제목</span>
+                    <span class="value" th:text="${order.boardTitle}"></span>
+                </div>
+                <div class="info-row">
+                    <span class="label">구매자</span>
+                    <span class="value" th:text="${order.buyerNickname}"></span>
+                </div>
+
+                <div class="req-box">
+                    <div class="label-title">상세 요구사항</div>
+                    <div class="req-content" th:text="${order.content}"></div>
+                </div>
+
+                <!-- 작가 화면: 결제 요청 / 의뢰 거절 -->
+                <div th:if="${isWriter and !order.orderStatus.trim().equals('CANCELED')}" class="action-section">
+
+                    <div class="form-group">
+                        <label>작업물 제목</label>
+                        <input type="text" name="orderTitle" th:value="${order.orderTitle}"
+                            th:disabled="${order.orderStatus.trim().equals('PROCESSING')}"
+                            placeholder="${order.boardTitle}" maxlength="100">
+                    </div>
+                    <form th:action="@{|/order/confirm/${order.orderId}|}" method="post">
+                        <div class="form-group">
+                            <label>최종 제시 금액</label>
+                            <input type="number" name="totalPrice" th:value="${order.totalPrice}"
+                                th:disabled="${!order.orderStatus.trim().equals('REQUEST')}" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>최종 마감일</label>
+                            <input type="date" name="deadline" th:value="${order.deadline}"
+                                th:disabled="${!order.orderStatus.trim().equals('REQUEST')}" required>
+                        </div>
+
+                        <div class="action-btn-row">
+                            <button type="submit" class="btn-primary"
+                                th:disabled="${!order.orderStatus.trim().equals('REQUEST')}"
+                                th:classappend="${order.orderStatus.trim().equals('REQUEST')} ? '' : 'btn-disabled'">
+                                <span th:if="${order.orderStatus.trim().equals('REQUEST')}">결제 요청</span>
+                                <span th:if="${order.orderStatus.trim().equals('PAYMENT_WAITING')}">요청 완료</span>
+                                <span th:if="${order.orderStatus.trim().equals('PROCESSING')}">결제 완료</span>
+                            </button>
+                        </div>
+                    </form>
+
+                    <form th:action="@{|/order/cancel/${order.orderId}|}" method="post"
+                        onsubmit="return confirm('정말 이 의뢰를 거절하시겠습니까?');" class="action-btn-row">
+                        <button type="submit" class="btn-sub"
+                            th:disabled="${order.orderStatus.trim().equals('PROCESSING')}"
+                            th:classappend="${order.orderStatus.trim().equals('PROCESSING')} ? 'btn-disabled' : ''">
+                            의뢰 거절
+                        </button>
+                    </form>
+                </div>
+
+                <!-- 의뢰인 화면: 결제하기 / 신청 취소 -->
+                <div th:if="${isBuyer and (order.orderStatus.trim().equals('PAYMENT_WAITING') or order.orderStatus.trim().equals('PROCESSING'))}"
+                    class="action-section">
+                    <div class="info-row">
+                        <span class="label">결제 금액</span>
+                        <span class="value" th:text="${order.totalPrice} + '원'"></span>
+                    </div>
+
+                    <div class="action-btn-row">
+                        <button type="button" class="btn-primary"
+                            th:disabled="${order.orderStatus.trim().equals('PROCESSING')}"
+                            th:classappend="${order.orderStatus.trim().equals('PROCESSING')} ? 'btn-disabled' : ''"
+                            th:onclick="${order.orderStatus.trim().equals('PROCESSING')} ? '' : ('requestPayment(' + ${order.orderId} + ')')">
+                            <span th:if="${order.orderStatus.trim().equals('PAYMENT_WAITING')}">결제하기</span>
+                            <span th:if="${order.orderStatus.trim().equals('PROCESSING')}">결제 완료</span>
+                        </button>
+
+                        <form th:action="@{|/order/cancel/${order.orderId}|}" method="post"
+                            onsubmit="return confirm('정말 이 신청을 취소하시겠습니까?');">
+                            <button type="submit" class="btn-sub"
+                                th:disabled="${order.orderStatus.trim().equals('PROCESSING')}"
+                                th:classappend="${order.orderStatus.trim().equals('PROCESSING')} ? 'btn-disabled' : ''">
+                                신청 취소
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="timeline-wrap">
+                <div class="label-title">진행 타임라인</div>
+
+                <div class="timeline">
+                    <div th:each="msg : ${messages}"
+                        th:if="${msg.messageType != null and !msg.messageType.trim().equals('TALK')}"
+                        class="timeline-item">
+
+                        <div class="timeline-dot" th:classappend="${
+                msg.messageType.trim().equals('CANCELED')} ? 'dot-red' :
+                (${msg.messageType.trim().equals('PAID')} ? 'dot-green' : 'dot-purple')">
+                        </div>
+
+                        <div class="timeline-content">
+                            <div class="timeline-label">
+                                <span th:if="${msg.messageType.trim().equals('NEW_REQUEST')}">의뢰 신청</span>
+                                <span th:if="${msg.messageType.trim().equals('PAY_REQUEST')}">결제 요청</span>
+                                <span th:if="${msg.messageType.trim().equals('PAID')}">결제 완료</span>
+                                <span th:if="${msg.messageType.trim().equals('SUBMIT')}">작업물 제출</span>
+                                <span th:if="${msg.messageType.trim().equals('CANCELED')}">취소됨</span>
+                            </div>
+
+                            <p class="timeline-text" th:text="${msg.content}"></p>
+
+                            <div th:if="${msg.files != null and !msg.files.isEmpty()}" class="timeline-files">
+                                <div th:each="file : ${msg.files}">
+                                    <a th:href="${file.filePath}" th:text="${file.originalName}" target="_blank"></a>
+                                </div>
+                            </div>
+
+                            <p class="timeline-time" th:text="${#temporals.format(msg.regDate, 'yyyy-MM-dd HH:mm')}">
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- 최종 승인 액션: 타임라인의 마지막 노드로 표시 -->
+                    <div th:if="${order.orderStatus.trim().equals('SUBMITTED')}" class="timeline-item">
+                        <div class="timeline-dot dot-pending"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-label">최종 승인</div>
+
+                            <div th:if="${isBuyer}">
+                                <p class="timeline-text">작업물을 확인하고 최종 승인해주세요.</p>
+                                <form th:action="@{|/order/approve/${order.orderId}|}" method="post"
+                                    onsubmit="return confirm('작업물을 승인하시겠습니까? 승인 후에는 되돌릴 수 없습니다.');">
+                                    <button type="submit" class="btn-notice-action">최종 승인</button>
+                                </form>
+                            </div>
+
+                            <div th:if="${isWriter}">
+                                <p class="timeline-text">의뢰인의 최종 승인을 기다리는 중입니다.</p>
+                                <button type="button" class="btn-notice-action btn-disabled" disabled>승인 대기중</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="btn-group">
+            <button type="button" class="btn-sub"
+                th:onclick="|location.href='@{/order/detail/{id}(id=${order.orderId})}'|">
+                소통창으로 돌아가기
+            </button>
+        </div>
+
+        <!-- 파일 첨부 제출 폼 -->
+        <div th:if="${isWriter and order.orderStatus.trim().equals('PROCESSING')}" class="action-section">
+            <form th:action="@{|/order/submit/${order.orderId}|}" method="post" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label>작업물 설명</label>
+                    <textarea name="content" required placeholder="완성된 작업물에 대한 설명을 남겨주세요."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>파일 첨부</label>
+                    <input type="file" name="files" multiple>
+                </div>
+                <div class="action-btn-row">
+                    <button type="submit" class="btn-primary">작업물 제출</button>
+                </div>
+            </form>
+        </div>
+
+
+
+
+
+        <script>
+            async function requestPayment(orderId) {
+                try {
+                    const res = await fetch(`/payment/prepare/${orderId}`, { method: "POST" });
+                    const data = await res.json();
+
+                    IMP.init("imp14868341");
+
+                    IMP.request_pay({
+                        pg: "uplus",
+                        pay_method: "card",
+                        merchant_uid: data.merchantUid,
+                        name: "작업 의뢰 결제",
+                        amount: data.amount,
+                    }, async function (rsp) {
+                        if (rsp.success) {
+                            const verifyRes = await fetch("/payment/verify", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({
+                                    imp_uid: rsp.imp_uid,
+                                    merchant_uid: rsp.merchant_uid
+                                })
+                            });
+
+                            if (verifyRes.ok) {
+                                alert("결제가 완료되었습니다!");
+                                location.href = `/order/detail/${orderId}`;
+                            } else {
+                                alert("결제 검증 실패");
+                            }
+                        } else {
+                            alert("결제 실패: " + rsp.error_msg);
+                        }
+                    });
+                } catch (error) {
+                    console.error("결제 진행 중 오류 발생:", error);
+                    alert("결제 요청 중 문제가 발생했습니다.");
+                }
+            }
+        </script>
+    </main>
+
+    <footer th:replace="~{fragments/common :: footer}"></footer>
+</body>
+
+</html>

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments/common :: head('주문 신청')}"></head>
+
+<body>
+    <header th:replace="~{fragments/common :: header}"></header>
+
+    <main class="container">
+        
+        <div class="form-card">
+            <div class="form-header">
+                <h3>의뢰 신청서 작성</h3>
+                <p>상세 요구사항과 조건을 입력해 주세요.</p>
+            </div>
+
+            <form th:action="@{/order/create/{id}(id=${boardId})}" method="post" class="styled-form">
+                <input type="hidden" name="boardId" th:value="${boardId}">
+                
+                <div class="form-group">
+                    <label for="content">요청 내용</label>
+                    <textarea id="content" name="content" placeholder="원하시는 작업의 상세한 특징, 캐릭터 외관, 구도 등을 자세히 적어주세요." required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="deadline">희망 마감일</label>
+                    <input type="date" id="deadline" name="deadline" 
+                    th:min="${#temporals.format(#temporals.createToday(), 'yyyy-MM-dd')}" required>                
+                </div>
+
+                <div class="form-group">
+                    <label th:text="'제시 금액 (기본 금액: ' + ${board.basePrice} + '원)'"></label>
+                    <div class="input-with-unit">
+                        <input type="number" name="totalPrice" th:placeholder="${board.basePrice}" required>
+                        <span>원</span>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn-submit-action">의뢰 신청서 제출하기</button>
+                    <button type="button" class="btn-cancel" th:onclick="|location.href='@{/board/detail/{id}(id=${boardId})}'|">취소</button>
+                </div>
+            </form>
+        </div>
+
+    </main>
+
+    <footer th:replace="~{fragments/common :: footer}"></footer>
+</body>
+</html>

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/common :: head('신청 내역 확인')}"></head>
+<body>
+    <header th:replace="~{fragments/common :: header}"></header>
+    <main class="container">
+        <div class="info-card">
+            <div class="info-header">
+                <h3>신청 내역</h3>
+            </div>
+            <div class="info-body">
+                <div class="info-row">
+                    <span class="label">게시글 제목</span>
+                    <span class="value" th:text="${order.boardTitle}"></span>
+                </div>
+                <div class="info-row">
+                    <span class="label">신청자</span>
+                    <span class="value" th:text="${order.buyerNickname}"></span>
+                </div>
+                <div class="info-row">
+                    <span class="label">희망 마감일</span>
+                    <span class="value" th:text="${request.requestDeadline}"></span>
+                </div>
+                <div class="info-row">
+                    <span class="label">희망 금액</span>
+                    <span class="value"
+                        th:text="${#numbers.formatInteger(request.requestPrice, 0, 'COMMA')} + '원'"></span>
+                </div>
+                <div class="req-box">
+                    <div class="label-title">상세 요구사항</div>
+                    <div class="req-content" th:text="${request.content}"></div>
+                </div>
+            </div>
+        </div>
+        <div class="btn-group">
+            <button type="button" class="btn-sub"
+                th:onclick="|location.href='@{/order/detail/{id}(id=${order.orderId})}'|">
+                소통창으로 돌아가기
+            </button>
+        </div>
+    </main>
+    <footer th:replace="~{fragments/common :: footer}"></footer>
+</body>
+</html>

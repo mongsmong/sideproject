@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments/common :: head('주문 내역')}"></head>
+
+<body>
+    <header th:replace="~{fragments/common :: header}"></header>
+
+    <h2>내 주문 내역</h2>
+    <div class="chat-list">
+        <div th:each="order : ${orderList}" class="chat-room-wrapper"
+            style="border-bottom: 1px solid #eee; padding: 10px;">
+
+            <a th:href="@{/order/detail/{id}(id=${order.orderId})}" class="chat-room-item"
+                style="text-decoration: none; color: inherit;">
+                <div class="room-top">
+                    <span class="nickname" th:text="${order.buyerNickname}"></span>
+                    <span class="time" th:text="${#temporals.format(order.regDate, 'MM/dd HH:mm')}"></span>
+                </div>
+                <div class="room-bottom">
+                    <p class="last-msg">
+                        <span th:if="${order.orderStatus == 'COMPLETE'}"
+                            style="color: #29aa74; font-weight: bold;">[완료됨] </span>
+                        <span th:if="${order.orderStatus == 'PROCESSING'}"
+                            style="color: #e73eaf; font-weight: bold;">[진행중] </span>
+                        <span th:if="${order.orderStatus == 'PAYMENT_WAITING'}"
+                            style="color: #407af8; font-weight: bold;">[결제 요청함] </span>
+                        <span th:if="${order.orderStatus == 'REQUEST'}" style="color: #f57a29; font-weight: bold;">[새로운
+                            의뢰] </span>
+                        <span th:text="${order.boardTitle}"></span>
+                    </p>
+                </div>
+            </a>
+
+
+
+        </div>
+    </div>
+    <footer th:replace="~{fragments/common :: footer}"></footer>
+</body>
+
+
+</html>

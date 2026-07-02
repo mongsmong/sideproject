@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head th:replace="~{fragments/common :: head('게시글 목록')}"></head>
+
+<body>
+    <header th:replace="~{fragments/common :: header}"></header>
+
+    <!-- 검색 및 카테고리 필터 영역 -->
+    <div class="search-wrap">
+        <!-- form 태그로 감싸고, GET 방식으로 컨트롤러에 요청 -->
+        <form th:action="@{/board/list}" method="get" class="search-form">
+
+            <!-- 1. 카테고리 선택 -->
+            <!-- th:value="${param.category}" ㄴ 검색 후에도 선택한 값이 유지 -->
+            <select name="category" class="category-select">
+                <option value="" th:selected="${param.category == null or param.category == ''}">전체 카테고리</option>
+                <option value="디자인" th:selected="${param.category != null and param.category.toString() == '디자인'}">디자인
+                </option>
+                <option value="일러스트" th:selected="${param.category != null and param.category.toString() == '일러스트'}">
+                    일러스트</option>
+                <option value="영상" th:selected="${param.category != null and param.category.toString() == '영상'}">영상
+                </option>
+                <option value="구해요" th:selected="${param.category != null and param.category.toString() == '구해요'}">구해요
+                </option>
+                <!-- 카테고리 추가 -->
+            </select>
+
+            <!-- 2. 검색어 입력 -->
+            <div class="input-box">
+                <!-- 검색 후에도 검색어가 지워지지 않고 남아있게 th:value 설정 -->
+                <input type="text" name="keyword" placeholder="검색어를 입력하세요." th:value="${param.keyword}"
+                    class="search-input">
+
+                <button type="submit" class="search-btn">
+                    <i class="fas fa-search"></i> <!-- 돋보기 아이콘 -->
+                </button>
+            </div>
+        </form>
+    </div>
+    <div class="popular-hashtags-wrap">
+        <div class="hashtag-title"></div>
+        <div class="hashtag-list">
+            <a th:each="tag : ${popularTags}" th:href="@{/board/list(keyword=${tag})}" th:text="'#' + ${tag}"
+                class="hashtag-item">
+            </a>
+        </div>
+    </div>
+
+
+    <main class="container">
+        <div class="board-top-bar">
+            <h3>의뢰 게시판</h3>
+            <a sec:authorize="hasRole('CLIENT')" th:href="@{/board/register}" class="btn-write">게시글 작성</a>
+        </div>
+
+        <div class="board-grid">
+            <a th:each="board : ${boards.content}" th:href="@{/board/detail/{id}(id=${board.boardId})}"
+                class="board-card">
+
+                <div class="card-img">
+                    <img src="https://placehold.co/300x200?text=No+Image" alt="썸네일">
+                </div>
+
+                <div class="card-info">
+                    <h4 class="title" th:text="${board.title}"></h4>
+
+                    <div class="sub-info">
+                        <span class="price" th:text="${board.basePrice} + '원'"></span>
+                        <span class="category" th:text="${board.category}"></span>
+                    </div>
+
+                    <div class="hashtag">#해시태그</div>
+
+                    <div class="writer" th:text="${board.writerNickname}"></div>
+                </div>
+            </a>
+        </div>
+
+        <div th:if="${boards.totalPages > 0}" class="pagination-wrap">
+            <ul class="pagination">
+                <li th:if="${boards.hasPrevious()}">
+                    <a th:href="@{/board/list(page=${boards.number - 1})}">이전</a>
+                </li>
+
+                <li th:each="i : ${#numbers.sequence(0, boards.totalPages - 1)}">
+                    <a th:href="@{/board/list(page=${i})}" th:text="${i + 1}"
+                        th:class="${boards.number == i ? 'active' : ''}"></a>
+                </li>
+
+                <li th:if="${boards.hasNext()}">
+                    <a th:href="@{/board/list(page=${boards.number + 1})}">다음</a>
+                </li>
+            </ul>
+        </div>
+    </main>
+
+    <footer th:replace="~{fragments/common :: footer}"></footer>
+</body>
+
+
+</html>

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments/common :: head('게시글 상세')}"></head>
+
+<body>
+    <header th:replace="~{fragments/common :: header}"></header>
+
+    <main class="container">
+        <div class="detail-card">
+            <div class="detail-header">
+                <span class="category-badge" th:text="${board.category}"></span>
+                <h2 th:text="${board.title}"></h2>
+                <div class="price-box">
+                    <span th:text="${board.basePrice}"></span>원
+                </div>
+            </div>
+
+            <div class="detail-body">
+                <h4>작업 설명</h4>
+                <div class="content-box" th:text="${board.content}"></div>
+            </div>
+
+            <div class="button-group">
+                <th:block sec:authorize="isAuthenticated() and hasRole('ROLE_CLIENT')">
+                    <a th:if="${#authentication.name != board.writerUsername}"
+                        th:href="@{/order/create/{id}(id=${board.boardId})}" class="btn-blue">신청하기</a>
+                </th:block>
+                <a th:href="@{/board/list}" class="btn-gray">목록으로</a>
+            </div>
+        </div>
+        <div th:if="${hasCompletedOrder}">
+            <a th:href="@{/review/register/{boardId}(boardId=${board.boardId})}" class="btn-review">리뷰 작성하기</a>
+        </div>
+    </main>
+
+    <footer th:replace="~{fragments/common :: footer}"></footer>
+</body>
+
+</html>

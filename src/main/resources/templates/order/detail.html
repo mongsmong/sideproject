@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head
+    th:replace="~{fragments/common :: head(${currentUsername == order.buyerUsername ? '작가' : order.buyerNickname} + '님과의 메시지')}">
+</head>
+
+<body>
+    <header th:replace="~{fragments/common :: header}"></header>
+
+    <main class="container">
+        <div style="margin-bottom: 15px; font-weight: bold; font-size: 1.1rem;">
+            <span th:if="${isBuyer}" th:text="${order.boardWriterUsername}"></span>
+            <span th:if="${isWriter}" th:text="${order.buyerNickname}"></span>
+            님과의 메시지
+        </div>
+
+
+
+        <div class="chat-bg">
+
+            <div th:if="${#lists.isEmpty(messages)}" class="system-notice-box">
+                <p th:if="${order.buyerUsername == currentUsername}" class="notice-text">
+                    작성하신 의뢰 신청서가 작가님께 전달되었습니다.
+                </p>
+                <p th:unless="${order.buyerUsername == currentUsername}" class="notice-text">
+                    <span th:text="'[' + ${order.boardTitle} + ']'"></span>에 새로운 의뢰가 들어왔습니다.
+                </p>
+                <button type="button" class="btn-notice-action"
+                    th:onclick="|location.href='@{/order/info/{id}(id=${order.orderId})}'|">
+                    의뢰서 확인
+                </button>
+            </div>
+
+            <div th:unless="${#lists.isEmpty(messages)}" th:each="msg : ${messages}"
+                th:class="${msg.senderUsername == currentUsername ? 'msg-row my' : 'msg-row other'}">
+
+                <div th:if="${msg.senderUsername != currentUsername}" class="sender-name"
+                    th:text="${msg.senderNickname}">
+                </div>
+
+                <!-- 결제 요청 / 신규 신청: 같은 카드로 표시 -->
+                <div th:if="${msg.messageType != null and (msg.messageType.trim().equals('PAY_REQUEST') or msg.messageType.trim().equals('NEW_REQUEST'))}"
+                    class="pay-card-wrap">
+                    <div class="system-notice-box">
+                        <p class="pay-card-title">
+                            <span th:text="${order.orderTitle}"></span> 의뢰에 대한 결제 요청이 도착했습니다.
+                        </p>
+                        <p class="pay-card-amount">
+                            <span th:text="${#numbers.formatInteger(order.totalPrice, 0, 'COMMA')}"></span>원
+                        </p>
+                        <button type="button" class="btn-notice-action"
+                            th:if="${msg.messageType.trim().equals('NEW_REQUEST')}"
+                            th:onclick="|location.href='@{/order/info/{id}/request/{mid}(id=${order.orderId},mid=${msg.messageId})}'|">
+                            의뢰서 상세
+                        </button>
+                        <button type="button" class="btn-notice-action"
+                            th:if="${msg.messageType.trim().equals('PAY_REQUEST')}"
+                            th:onclick="|location.href='@{/order/info/{id}(id=${order.orderId})}'|">
+                            의뢰서 상세
+                        </button>
+                        <p class="pay-card-time" th:text="${#temporals.format(msg.regDate, 'HH:mm')}"></p>
+                    </div>
+                </div>
+
+                <!-- 결제 완료 메시지: 카드로만 표시 -->
+                <div th:if="${msg.messageType != null and msg.messageType.trim().equals('PAID')}" class="pay-card-wrap">
+                    <div class="system-notice-box paid-card">
+                        <p class="paid-card-text" th:text="${msg.content}"></p>
+                        <p class="pay-card-title">
+                            <span th:text="${order.orderTitle}"></span> 작업이 진행됩니다.
+                        </p>
+                        <button type="button" class="btn-notice-action"
+                            th:onclick="|location.href='@{/order/info/{id}(id=${order.orderId})}'|">
+                            의뢰서 상세
+                        </button>
+                        <p class="pay-card-time" th:text="${#temporals.format(msg.regDate, 'HH:mm')}"></p>
+                    </div>
+                </div>
+
+                <!-- 작업 완료(최종 승인) 메시지: 카드로만 표시 -->
+                <div th:if="${msg.messageType != null and msg.messageType.trim().equals('APPROVED')}"
+                    class="pay-card-wrap">
+                    <div class="system-notice-box paid-card">
+                        <p class="paid-card-text" th:text="${msg.content}"></p>
+                        <p class="pay-card-title">
+                            <span th:text="${order.orderTitle}"></span> 의뢰가 최종 완료되었습니다.
+                        </p>
+                        <button type="button" class="btn-notice-action"
+                            th:onclick="|location.href='@{/order/info/{id}(id=${order.orderId})}'|">
+                            의뢰서 상세
+                        </button>
+                        <p class="pay-card-time" th:text="${#temporals.format(msg.regDate, 'HH:mm')}"></p>
+                    </div>
+                </div>
+
+                <!-- 취소 메시지: 카드로만 표시 -->
+                <div th:if="${msg.messageType != null and msg.messageType.trim().equals('CANCELED')}"
+                    class="pay-card-wrap">
+                    <div class="system-notice-box cancel-card">
+                        <p class="notice-text cancel-card-text" th:text="${msg.content}"></p>
+                        <p class="cancel-card-time" th:text="${#temporals.format(msg.regDate, 'HH:mm')}"></p>
+                    </div>
+                </div>
+
+                <!-- 작업물 제출 메시지: 카드로 표시 -->
+                <div th:if="${msg.messageType != null and msg.messageType.trim().equals('SUBMIT')}"
+                    class="pay-card-wrap">
+                    <div class="system-notice-box">
+                        <p class="pay-card-title">
+                            의뢰하신 <span class="pay-card-title-ellipsis"
+                                th:text="${order.orderTitle != null ? order.orderTitle : order.boardTitle}"></span>에 대한
+                            작업물이 도착했습니다
+                        </p>
+                        <button type="button" class="btn-notice-action"
+                            th:onclick="|location.href='@{/order/info/{id}(id=${order.orderId})}'|">
+                            상세보기
+                        </button>
+                        <p class="pay-card-time" th:text="${#temporals.format(msg.regDate, 'HH:mm')}"></p>
+                    </div>
+                </div>
+
+                <!-- 일반 메시지: 기존 버블 -->
+                <div th:if="${msg.messageType == null or (!msg.messageType.trim().equals('PAY_REQUEST') 
+                                        and !msg.messageType.trim().equals('CANCELED') 
+                                        and !msg.messageType.trim().equals('PAID')
+                                        and !msg.messageType.trim().equals('NEW_REQUEST')
+                                        and !msg.messageType.trim().equals('SUBMIT')
+                                        and !msg.messageType.trim().equals('APPROVED'))}" class="bubble-box">
+                    <span th:if="${msg.senderUsername == currentUsername}" class="time"
+                        th:text="${#temporals.format(msg.regDate, 'HH:mm')}"></span>
+
+                    <div class="bubble">
+                        <span th:text="${msg.content}"></span>
+                    </div>
+
+                    <span th:if="${msg.senderUsername != currentUsername}" class="time"
+                        th:text="${#temporals.format(msg.regDate, 'HH:mm')}"></span>
+                </div>
+            </div>
+        </div>
+
+
+        <form th:action="@{|/order/detail/${order.orderId}/send|}" method="post" class="send-bar">
+            <div class="input-wrap">
+                <input type="text" name="content" placeholder="메시지를 입력하세요" required autocomplete="off">
+            </div>
+            <button type="submit" class="btn-send">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+            </button>
+        </form>
+
+        <div style="margin-top: 20px; display: flex; gap: 8px;">
+            <button type="button" class="btn-sub"
+                th:onclick="|location.href='@{/order/info/{id}(id=${order.orderId})}'|">의뢰 확인</button>
+            <button type="button" class="btn-sub" th:onclick="|location.href='@{/order/list}'|">목록으로</button>
+        </div>
+    </main>
+
+    <footer th:replace="~{fragments/common :: footer}"></footer>
+</body>
+
+</html>

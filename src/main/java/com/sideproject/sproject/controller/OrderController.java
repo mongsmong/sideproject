@@ -1,0 +1,181 @@
+package com.sideproject.sproject.controller;
+
+import com.sideproject.sproject.service.OrderMessageService;
+
+import java.io.IOException;
+import java.security.Principal;
+import java.util.List;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.sideproject.sproject.common.AccountRole;
+import com.sideproject.sproject.dto.BoardDTO;
+import com.sideproject.sproject.dto.OrderDTO;
+import com.sideproject.sproject.dto.OrderMessageDTO;
+import com.sideproject.sproject.entity.Account;
+import com.sideproject.sproject.entity.Board;
+import com.sideproject.sproject.repository.AccountRepository;
+import com.sideproject.sproject.repository.BoardRepository;
+import com.sideproject.sproject.service.BoardService;
+import com.sideproject.sproject.service.OrderService;
+
+import lombok.RequiredArgsConstructor;
+
+@Controller
+@RequiredArgsConstructor
+@RequestMapping("/order")
+public class OrderController {
+    private final OrderService orderService;
+    private final BoardRepository boardRepository;
+    private final AccountRepository accountRepository;
+    private final BoardService boardService;
+    private final OrderMessageService orderMessageService;
+
+    // 주문 작성
+    @GetMapping("/create/{boardId}")
+    public String OrderForm(@PathVariable Long boardId, Model model) {
+        BoardDTO boardDTO = boardService.getBoardById(boardId);
+        model.addAttribute("boardId", boardId);
+        model.addAttribute("board", boardDTO);
+        return "/order/create";
+    }
+
+    // 주문 만들기 (중복 방지 & 소통창 바로 가기)
+    @PostMapping("/create/{boardId}")
+    public String createOrder(@PathVariable Long boardId, OrderDTO dto, Principal principal) {
+        // 로그인 사용자 정보 체크
+        if (principal == null) {
+            return "redirect:/auth/login";
+        }
+        System.out.println("프론트에서 넘어온 DTO: " + dto.toString());
+
+        Board board = boardRepository.findById(dto.getBoardId())
+                .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다."));
+        Account buyer = accountRepository.findByUsername(principal.getName())
+                .orElseThrow(() -> new IllegalArgumentException("회원 정보를 찾을 수 없습니다."));
+
+        if (board.getAccount().getUsername().equals(principal.getName())) {
+            throw new IllegalStateException("본인의 게시글에는 신청할 수 없습니다.");
+        }
+        if (buyer.getRole() != AccountRole.ROLE_CLIENT) {
+            throw new IllegalStateException("신청 권한이 없습니다.");
+        }
+
+        // 4. 저장 및 중복 체크
+        Long orderId = orderService.saveOrder(dto, board, buyer);
+
+        return "redirect:/order/detail/" + orderId;
+    }
+
+    // 주문 캔슬
+    @PostMapping("/cancel/{orderId}")
+    public String cancelOrder(@PathVariable Long orderId, Principal principal) {
+        orderService.cancelOrder(orderId, principal.getName());
+        return "redirect:/order/detail/" + orderId;
+    }
+
+    // 주문 내역 목록 화면
+    @GetMapping("/list")
+    public String orderList(Principal principal, Model model) {
+
+        // 2. 시큐리티에서 현재 로그인한 사용자의 아이디(username) 가져오기
+        String username = principal.getName();
+
+        // 3. 서비스 호출하여 내 계정과 관련된 DTO 리스트 받기
+        List<OrderDTO> orderList = orderService.getOrderList(username);
+
+        // 4. 모델에 담아서 HTML로 전달
+        model.addAttribute("orderList", orderList);
+
+        return "/order/list";
+    }
+
+    // 의뢰창
+    @GetMapping("/detail/{orderId}")
+    public String orderDetail(@PathVariable Long orderId, Principal principal, Model model) {
+        OrderDTO orderDTO = orderService.getOrderDetail(orderId);
+        List<OrderMessageDTO> messages = orderMessageService.getMessages(orderId);
+        String currentUsername = principal.getName();
+        boolean isBuyer = orderDTO.getBuyerUsername().equals(currentUsername);
+        boolean isWriter = orderDTO.getBoardWriterUsername().equals(currentUsername);
+        model.addAttribute("order", orderDTO); // ← 오타 수정
+        model.addAttribute("messages", messages);
+        model.addAttribute("currentUsername", currentUsername);
+        model.addAttribute("isBuyer", isBuyer);
+        model.addAttribute("isWriter", isWriter);
+        return "order/detail";
+    }
+
+    // 메시지 전송 (OrderMessageController에서 여기로 이동)
+    @PostMapping("/detail/{orderId}/send")
+    public String sendMessage(@PathVariable Long orderId,
+            @RequestParam String content,
+            Principal principal) {
+        orderMessageService.sendMessage(orderId, principal.getName(), content);
+        return "redirect:/order/detail/" + orderId;
+    }
+
+    @GetMapping("/info/{orderId}")
+    public String orderInfo(@PathVariable Long orderId, Model model, Principal principal) {
+        OrderDTO orderDTO = orderService.getOrderDetail(orderId);
+        List<OrderMessageDTO> messages = orderMessageService.getMessages(orderId);
+
+        String currentUsername = principal.getName();
+        boolean isBuyer = currentUsername.equals(orderDTO.getBuyerUsername());
+        boolean isWriter = currentUsername.equals(orderDTO.getBoardWriterUsername());
+
+        model.addAttribute("order", orderDTO);
+        model.addAttribute("messages", messages);
+        model.addAttribute("isBuyer", isBuyer);
+        model.addAttribute("isWriter", isWriter);
+
+        return "/order/info";
+    }
+
+    @PostMapping("/confirm/{orderId}")
+    public String confirmRequest(@PathVariable Long orderId,
+            @RequestParam Integer totalPrice,
+            @RequestParam(required = false) String orderTitle,
+            Principal principal) {
+        orderService.confirmRequest(orderId, totalPrice, orderTitle, principal.getName());
+        return "redirect:/order/detail/" + orderId;
+    }
+
+    // 작업물 제출
+    @PostMapping("/submit/{orderId}")
+    public String submitWork(@PathVariable Long orderId,
+            @RequestParam String content,
+            @RequestParam(required = false) List<MultipartFile> files,
+            Principal principal) throws IOException {
+        orderService.submitWork(orderId, principal.getName(), content, files);
+        return "redirect:/order/detail/" + orderId;
+    }
+
+    @GetMapping("/info/{orderId}/request/{messageId}")
+    public String orderRequestInfo(@PathVariable Long orderId, @PathVariable Long messageId,
+            Model model, Principal principal) {
+        OrderDTO orderDTO = orderService.getOrderDetail(orderId);
+        OrderMessageDTO request = orderMessageService.getMessage(messageId);
+
+        String currentUsername = principal.getName();
+        model.addAttribute("order", orderDTO);
+        model.addAttribute("request", request);
+        model.addAttribute("isBuyer", currentUsername.equals(orderDTO.getBuyerUsername()));
+        model.addAttribute("isWriter", currentUsername.equals(orderDTO.getBoardWriterUsername()));
+
+        return "/order/info-request";
+    }
+
+    @PostMapping("/approve/{orderId}")
+    public String approveWork(@PathVariable Long orderId, Principal principal) {
+        orderService.approveWork(orderId, principal.getName());
+        return "redirect:/order/detail/" + orderId;
+    }
+}
