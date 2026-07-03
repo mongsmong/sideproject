@@ -38,15 +38,18 @@
             <ul class="nav-menu" sec:authorize="isAuthenticated()" style="list-style:none; padding:0; margin:0;">
                 <li>
                     <div class="user-menu-container">
-                        <div class="user-name" onclick="toggleMenu()" th:text="${nickname} + '님 ▼'"
-                            style="cursor:pointer;">
-                            닉네임님
+                        <div class="user-name" onclick="toggleMenu()"
+                            style="cursor:pointer; display:flex; align-items:center; gap:8px;">
+                            <img th:if="${profileImageUrl != null}" th:src="${profileImageUrl}"
+                                class="header-profile-img">
+                            <div th:unless="${profileImageUrl != null}" class="header-profile-placeholder"
+                                th:text="${nickname != null ? #strings.substring(nickname, 0, 1) : '?'}"></div>
+                            <span th:text="${nickname} + '님 ▼'"></span>
                         </div>
 
                         <div id="userDropdown" class="dropdown-menu">
-                            <a href="/mypage">마이페이지</a>
-                            <a href="/order/list">의뢰 관리</a>
-
+                            <a th:href="@{/account/mypage/info}">마이페이지</a>
+                            <a th:href="@{/order/list}">의뢰 관리</a>
                             <form th:action="@{/logout}" method="post" style="margin: 0;">
                                 <button type="submit" class="logout-btn">로그아웃</button>
                             </form>

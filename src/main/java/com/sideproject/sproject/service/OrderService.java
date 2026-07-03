@@ -43,9 +43,17 @@ public class OrderService {
                                 board.getBoardId(), buyer.getAccountId());
 
                 Order order;
+
                 if (existingOrder.isPresent()) {
-                        // 채팅방 중복 생성x
-                        order = existingOrder.get();
+                        order = existingOrder.get(); // ← 같은 채팅방 그대로 재사용, 새로 안 만듦
+
+                        if ("COMPLETED".equals(order.getOrderStatus()) || "CANCELED".equals(order.getOrderStatus())) {
+                                order.setOrderStatus("REQUEST");
+                                order.setContent(dto.getContent());
+                                order.setDeadline(dto.getDeadline());
+                                order.setTotalPrice(dto.getTotalPrice());
+                                order.setOrderTitle(null); // 이전 회차 커스텀 제목도 초기화
+                        }
                 } else {
                         order = Order.builder()
                                         .boardId(board)
@@ -53,32 +61,25 @@ public class OrderService {
                                         .content(dto.getContent())
                                         .deadline(dto.getDeadline())
                                         .totalPrice(dto.getTotalPrice())
-                                        .orderStatus("REQUEST") // 기본 상태값 설정
+                                        .orderStatus("REQUEST")
                                         .build();
                         orderRepository.save(order);
-
-                        OrderMessage newRequestMsg = OrderMessage.builder()
-                                        .orderId(order)
-                                        .senderId(buyer)
-                                        .messageType("NEW_REQUEST")
-                                        .content(dto.getContent())
-                                        .requestDeadline(dto.getDeadline())
-                                        .requestPrice(dto.getTotalPrice())
-                                        .build();
-                        orderMessageRepository.save(newRequestMsg);
                 }
-                // 신청 알림 카드
+
                 OrderMessage newRequestMsg = OrderMessage.builder()
                                 .orderId(order)
                                 .senderId(buyer)
                                 .messageType("NEW_REQUEST")
                                 .content(dto.getContent())
+                                .requestDeadline(dto.getDeadline())
+                                .requestPrice(dto.getTotalPrice())
                                 .build();
                 orderMessageRepository.save(newRequestMsg);
 
                 return order.getOrderId();
         }
 
+        // 의뢰 수락
         @Transactional
         public void approveWork(Long orderId, String username) {
                 Order order = orderRepository.findById(orderId)
@@ -103,45 +104,25 @@ public class OrderService {
                 orderMessageRepository.save(approveMsg);
         }
 
-        // 2. 주문 내역 조회 (화면 표시용)
-        // 엔티티를 DTO로 변환하여 화면으로 전달합니다.
-        private OrderDTO toDTO(Order order) {
-                return OrderDTO.builder()
-                                .orderId(order.getOrderId())
-                                .boardId(order.getBoardId().getBoardId())
-                                .boardTitle(order.getBoardId().getTitle())
-                                .orderTitle(order.getOrderTitle() != null ? order.getOrderTitle()
-                                                : order.getBoardId().getTitle())
-                                .boardWriterUsername(order.getBoardId().getAccount().getUsername()) // 판매자
-                                .buyerUsername(order.getBuyerId().getUsername()) // 구매자
-                                .buyerNickname(order.getBuyerId().getNickname())
-                                .content(order.getContent())
-                                .deadline(order.getDeadline())
-                                .totalPrice(order.getTotalPrice())
-                                .orderStatus(order.getOrderStatus())
-                                .regDate(order.getRegDate())
-                                .build();
-        }
-
-        // 3. 회원의 주문 내역 목록 조회
+        // 회원의 주문 내역 목록 조회
         public List<OrderDTO> getOrderList(String username) {
-                // 1. 내가 구매자 주문 리스트 조회
+                // 구매자 주문 리스트 조회
                 List<Order> buyerOrders = orderRepository.findByBuyerId_Username(username);
 
-                // 2. 내가 판매자주문 리스트 조회
+                // 판매자주문 리스트 조회
                 List<Order> sellerOrders = orderRepository.findByBoardId_Account_Username(username);
 
-                // 3. 두 리스트를 하나로 합치기
+                // 리스트를 하나로 합치기
                 buyerOrders.addAll(sellerOrders);
 
-                // 4. 전체 주문 리스트를 DTO로 변환하여 반환
+                // 전체 주문 리스트를 DTO로 변환하여 반환
                 return buyerOrders.stream()
                                 .distinct() // 중복 제거
                                 .map(this::toDTO)
                                 .collect(Collectors.toList());
         }
 
-        // 3. 내역 목록 상세 조회
+        // 내역 목록 상세 조회
         public OrderDTO getOrderDetail(Long orderId) {
                 OrderDTO dto = new OrderDTO();
                 Order order = orderRepository.findById(orderId)
@@ -265,5 +246,51 @@ public class OrderService {
                                 orderFileRepository.save(orderFile);
                         }
                 }
+        }
+
+        // 수정 요청 (완료 반려)
+        @Transactional
+        public void requestRevision(Long orderId, String username, String content) {
+                Order order = orderRepository.findById(orderId)
+                                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 주문입니다."));
+
+                if (!order.getBuyerId().getUsername().equals(username)) {
+                        throw new IllegalStateException("수정 요청 권한이 없습니다.");
+                }
+
+                if (!"SUBMITTED".equals(order.getOrderStatus())) {
+                        throw new IllegalStateException("제출된 작업물이 없습니다.");
+                }
+
+                order.setOrderStatus("REVISION_REQUESTED");
+
+                OrderMessage revisionMsg = OrderMessage.builder()
+                                .orderId(order)
+                                .senderId(order.getBuyerId())
+                                .messageType("REVISION_REQUEST")
+                                .content(content)
+                                .build();
+                orderMessageRepository.save(revisionMsg);
+        }
+
+        private OrderDTO toDTO(Order order) {
+                return OrderDTO.builder()
+                                .orderId(order.getOrderId())
+                                .boardId(order.getBoardId().getBoardId())
+                                .boardTitle(order.getBoardId().getTitle())
+                                .orderTitle(order.getOrderTitle() != null ? order.getOrderTitle()
+                                                : order.getBoardId().getTitle())
+                                .boardWriterUsername(order.getBoardId().getAccount().getUsername()) // 판매자
+                                .boardWriterProfileImageUrl(order.getBoardId().getAccount().getProfileImageUrl())
+
+                                .buyerUsername(order.getBuyerId().getUsername()) // 구매자
+                                .buyerNickname(order.getBuyerId().getNickname())
+                                .buyerProfileImageUrl(order.getBuyerId().getProfileImageUrl())
+                                .content(order.getContent())
+                                .deadline(order.getDeadline())
+                                .totalPrice(order.getTotalPrice())
+                                .orderStatus(order.getOrderStatus())
+                                .regDate(order.getRegDate())
+                                .build();
         }
 }

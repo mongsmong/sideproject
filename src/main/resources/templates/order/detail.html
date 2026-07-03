@@ -19,6 +19,7 @@
 
         <div class="chat-bg">
 
+            <!-- 의뢰 신청 -->
             <div th:if="${#lists.isEmpty(messages)}" class="system-notice-box">
                 <p th:if="${order.buyerUsername == currentUsername}" class="notice-text">
                     작성하신 의뢰 신청서가 작가님께 전달되었습니다.
@@ -35,8 +36,10 @@
             <div th:unless="${#lists.isEmpty(messages)}" th:each="msg : ${messages}"
                 th:class="${msg.senderUsername == currentUsername ? 'msg-row my' : 'msg-row other'}">
 
-                <div th:if="${msg.senderUsername != currentUsername}" class="sender-name"
-                    th:text="${msg.senderNickname}">
+                <div th:if="${msg.senderUsername != currentUsername}" class="sender-name">
+                    <img th:if="${msg.senderProfileImageUrl != null}" th:src="${msg.senderProfileImageUrl}"
+                        class="chat-profile-img">
+                    <span class="sender-name" th:text="${msg.senderNickname}"></span>
                 </div>
 
                 <!-- 결제 요청 / 신규 신청: 같은 카드로 표시 -->
@@ -44,7 +47,8 @@
                     class="pay-card-wrap">
                     <div class="system-notice-box">
                         <p class="pay-card-title">
-                            <span th:text="${order.orderTitle}"></span> 의뢰에 대한 결제 요청이 도착했습니다.
+                            <span class="pay-card-title-ellipsis" th:text="${order.orderTitle}"></span>에 대한 결제 요청이
+                            도착했습니다.
                         </p>
                         <p class="pay-card-amount">
                             <span th:text="${#numbers.formatInteger(order.totalPrice, 0, 'COMMA')}"></span>원
@@ -68,7 +72,7 @@
                     <div class="system-notice-box paid-card">
                         <p class="paid-card-text" th:text="${msg.content}"></p>
                         <p class="pay-card-title">
-                            <span th:text="${order.orderTitle}"></span> 작업이 진행됩니다.
+                            <span class="pay-card-title-ellipsis" th:text="${order.orderTitle}"></span> 작업이 진행됩니다.
                         </p>
                         <button type="button" class="btn-notice-action"
                             th:onclick="|location.href='@{/order/info/{id}(id=${order.orderId})}'|">
@@ -108,7 +112,7 @@
                     class="pay-card-wrap">
                     <div class="system-notice-box">
                         <p class="pay-card-title">
-                            의뢰하신 <span class="pay-card-title-ellipsis"
+                            <span class="pay-card-title-ellipsis"
                                 th:text="${order.orderTitle != null ? order.orderTitle : order.boardTitle}"></span>에 대한
                             작업물이 도착했습니다
                         </p>
@@ -120,13 +124,31 @@
                     </div>
                 </div>
 
+                <!-- 수정 요청 메시지: 카드로만 표시 -->
+                <div th:if="${msg.messageType != null and msg.messageType.trim().equals('REVISION_REQUEST')}"
+                    class="pay-card-wrap">
+                    <div class="system-notice-box revision-card">
+                        <p class="pay-card-title">
+                            <span class="pay-card-title-ellipsis"
+                                th:text="${order.orderTitle != null ? order.orderTitle : order.boardTitle}"></span>에 대한
+                            수정요청이 도착했습니다
+                        </p>
+                        <button type="button" class="btn-notice-action"
+                            th:onclick="|location.href='@{/order/info/{id}(id=${order.orderId})}'|">
+                            의뢰서 상세
+                        </button>
+                        <p class="pay-card-time" th:text="${#temporals.format(msg.regDate, 'HH:mm')}"></p>
+                    </div>
+                </div>
+
                 <!-- 일반 메시지: 기존 버블 -->
                 <div th:if="${msg.messageType == null or (!msg.messageType.trim().equals('PAY_REQUEST') 
                                         and !msg.messageType.trim().equals('CANCELED') 
                                         and !msg.messageType.trim().equals('PAID')
                                         and !msg.messageType.trim().equals('NEW_REQUEST')
                                         and !msg.messageType.trim().equals('SUBMIT')
-                                        and !msg.messageType.trim().equals('APPROVED'))}" class="bubble-box">
+                                        and !msg.messageType.trim().equals('APPROVED')
+                                        and !msg.messageType.trim().equals('REVISION_REQUEST'))}" class="bubble-box">
                     <span th:if="${msg.senderUsername == currentUsername}" class="time"
                         th:text="${#temporals.format(msg.regDate, 'HH:mm')}"></span>
 

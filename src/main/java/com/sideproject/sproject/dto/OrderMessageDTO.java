@@ -16,6 +16,7 @@ public class OrderMessageDTO {
     private Long orderId;
     private String senderUsername;
     private String senderNickname;
+    private String senderProfileImageUrl;
     private String content;
     private String messageType;
     private LocalDateTime regDate;

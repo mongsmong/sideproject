@@ -85,14 +85,13 @@ public class OrderController {
     @GetMapping("/list")
     public String orderList(Principal principal, Model model) {
 
-        // 2. 시큐리티에서 현재 로그인한 사용자의 아이디(username) 가져오기
+        // 시큐리티에서 현재 사용자username 가져오기
         String username = principal.getName();
-
-        // 3. 서비스 호출하여 내 계정과 관련된 DTO 리스트 받기
+        // DTO 리스트
         List<OrderDTO> orderList = orderService.getOrderList(username);
-
-        // 4. 모델에 담아서 HTML로 전달
+        // model로 HTML로 전달
         model.addAttribute("orderList", orderList);
+        model.addAttribute("currentUsername", username);
 
         return "/order/list";
     }
@@ -122,6 +121,7 @@ public class OrderController {
         return "redirect:/order/detail/" + orderId;
     }
 
+    // 상세 페이지
     @GetMapping("/info/{orderId}")
     public String orderInfo(@PathVariable Long orderId, Model model, Principal principal) {
         OrderDTO orderDTO = orderService.getOrderDetail(orderId);
@@ -155,6 +155,15 @@ public class OrderController {
             @RequestParam(required = false) List<MultipartFile> files,
             Principal principal) throws IOException {
         orderService.submitWork(orderId, principal.getName(), content, files);
+        return "redirect:/order/detail/" + orderId;
+    }
+
+    // 수정 요청
+    @PostMapping("/revision/{orderId}")
+    public String requestRevision(@PathVariable Long orderId,
+            @RequestParam String content,
+            Principal principal) {
+        orderService.requestRevision(orderId, principal.getName(), content);
         return "redirect:/order/detail/" + orderId;
     }
 

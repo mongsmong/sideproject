@@ -24,6 +24,9 @@ public class Account {
     
     @Column(nullable = false)
     private String password;
+
+    @Column
+    private String profileImageUrl;
     
     @Column(nullable = false, unique = true)
     private String nickname;

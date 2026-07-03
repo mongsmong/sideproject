@@ -13,31 +13,45 @@
 
             <a th:href="@{/order/detail/{id}(id=${order.orderId})}" class="chat-room-item"
                 style="text-decoration: none; color: inherit;">
+
                 <div class="room-top">
-                    <span class="nickname" th:text="${order.buyerNickname}"></span>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <img th:if="${(order.buyerUsername == currentUsername ? order.boardWriterProfileImageUrl : order.buyerProfileImageUrl) != null}"
+                            th:src="${order.buyerUsername == currentUsername ? order.boardWriterProfileImageUrl : order.buyerProfileImageUrl}"
+                            class="list-profile-img">
+                        <div th:unless="${(order.buyerUsername == currentUsername ? order.boardWriterProfileImageUrl : order.buyerProfileImageUrl) != null}"
+                            class="list-profile-placeholder"
+                            th:text="${#strings.substring(order.buyerUsername == currentUsername ? order.boardWriterUsername : order.buyerNickname, 0, 1)}">
+                        </div>
+                        <span class="nickname"
+                            th:text="${order.buyerUsername == currentUsername ? order.boardWriterUsername : order.buyerNickname}"></span>
+                    </div>
                     <span class="time" th:text="${#temporals.format(order.regDate, 'MM/dd HH:mm')}"></span>
                 </div>
+
                 <div class="room-bottom">
                     <p class="last-msg">
-                        <span th:if="${order.orderStatus == 'COMPLETE'}"
-                            style="color: #29aa74; font-weight: bold;">[완료됨] </span>
-                        <span th:if="${order.orderStatus == 'PROCESSING'}"
-                            style="color: #e73eaf; font-weight: bold;">[진행중] </span>
-                        <span th:if="${order.orderStatus == 'PAYMENT_WAITING'}"
-                            style="color: #407af8; font-weight: bold;">[결제 요청함] </span>
                         <span th:if="${order.orderStatus == 'REQUEST'}" style="color: #f57a29; font-weight: bold;">[새로운
                             의뢰] </span>
+                        <span th:if="${order.orderStatus == 'PAYMENT_WAITING'}"
+                            style="color: #407af8; font-weight: bold;">[결제 요청함] </span>
+                        <span th:if="${order.orderStatus == 'PROCESSING'}"
+                            style="color: #e73eaf; font-weight: bold;">[진행중] </span>
+                        <span th:if="${order.orderStatus == 'SUBMITTED'}"
+                            style="color: #9333ea; font-weight: bold;">[제출됨] </span>
+                        <span th:if="${order.orderStatus == 'REVISION_REQUESTED'}"
+                            style="color: #eebb13; font-weight: bold;">[수정요청] </span>
+                        <span th:if="${order.orderStatus == 'COMPLETED'}"
+                            style="color: #29aa74; font-weight: bold;">[완료됨] </span>
+                        <span th:if="${order.orderStatus == 'CANCELED'}"
+                            style="color: #8d8d8d; font-weight: bold;">[취소됨] </span>
                         <span th:text="${order.boardTitle}"></span>
                     </p>
                 </div>
             </a>
-
-
-
         </div>
     </div>
     <footer th:replace="~{fragments/common :: footer}"></footer>
 </body>
-
 
 </html>

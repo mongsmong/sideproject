@@ -45,10 +45,9 @@ public String listBoards(
     List<String> popularTags = boardService.getPopularHashtags();
     model.addAttribute("popularTags", popularTags);
 
-    return "board/list"; // ★ void 대신 명시적으로 뷰 파일 경로를 리턴!
+    return "board/list";
 }
 
-    // 이게 없거나 @PostMapping으로만 되어있으면 이 에러 뜸
     @GetMapping("/register")
     public String registerForm() {
         return "board/register"; // html 파일 경로

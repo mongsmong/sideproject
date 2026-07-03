@@ -24,7 +24,11 @@
                 </div>
                 <div class="info-row">
                     <span class="label">구매자</span>
-                    <span class="value" th:text="${order.buyerNickname}"></span>
+                    <span class="value" style="display:flex; align-items:center; gap:6px;">
+                        <img th:if="${order.buyerProfileImageUrl != null}" th:src="${order.buyerProfileImageUrl}"
+                            class="info-profile-img">
+                        <span th:text="${order.buyerNickname}"></span>
+                    </span>
                 </div>
 
                 <div class="req-box">
@@ -35,13 +39,14 @@
                 <!-- 작가 화면: 결제 요청 / 의뢰 거절 -->
                 <div th:if="${isWriter and !order.orderStatus.trim().equals('CANCELED')}" class="action-section">
 
-                    <div class="form-group">
-                        <label>작업물 제목</label>
-                        <input type="text" name="orderTitle" th:value="${order.orderTitle}"
-                            th:disabled="${order.orderStatus.trim().equals('PROCESSING')}"
-                            placeholder="${order.boardTitle}" maxlength="100">
-                    </div>
                     <form th:action="@{|/order/confirm/${order.orderId}|}" method="post">
+                        <div class="form-group">
+                            <label>작업물 제목</label>
+                            <input type="text" name="orderTitle" th:value="${order.orderTitle}"
+                                th:disabled="${order.orderStatus.trim().equals('PROCESSING')}"
+                                th:placeholder="${order.boardTitle}" maxlength="100">
+                        </div>
+
                         <div class="form-group">
                             <label>최종 제시 금액</label>
                             <input type="number" name="totalPrice" th:value="${order.totalPrice}"
@@ -104,6 +109,7 @@
                 </div>
             </div>
 
+
             <div class="timeline-wrap">
                 <div class="label-title">진행 타임라인</div>
 
@@ -124,39 +130,68 @@
                                 <span th:if="${msg.messageType.trim().equals('PAID')}">결제 완료</span>
                                 <span th:if="${msg.messageType.trim().equals('SUBMIT')}">작업물 제출</span>
                                 <span th:if="${msg.messageType.trim().equals('CANCELED')}">취소됨</span>
+                                <span th:if="${msg.messageType.trim().equals('REVISION_REQUEST')}">수정 요청</span>
                             </div>
 
-                            <p class="timeline-text" th:text="${msg.content}"></p>
-
-                            <div th:if="${msg.files != null and !msg.files.isEmpty()}" class="timeline-files">
-                                <div th:each="file : ${msg.files}">
+                            <p class="timeline-text" th:text="${msg.content}"
+                                th:unless="${msg.messageType.trim().equals('SUBMIT')}"></p>
+                            <!-- 작성자 작성 박스 -->
+                            <div th:if="${msg.messageType.trim().equals('SUBMIT')}" class="req-box"
+                                style="margin-top: 6px;">
+                                <div class="req-content" th:text="${msg.content}"></div>
+                            </div>
+                            <!-- 첨부파일 박스 -->
+                            <div th:if="${msg.messageType.trim().equals('SUBMIT') and msg.files != null and !msg.files.isEmpty()}"
+                                class="req-box file-box" style="margin-top: 8px;">
+                                <div th:each="file : ${msg.files}" class="file-item">
+                                    <span class="file-icon">🔗</span>
                                     <a th:href="${file.filePath}" th:text="${file.originalName}" target="_blank"></a>
                                 </div>
                             </div>
-
                             <p class="timeline-time" th:text="${#temporals.format(msg.regDate, 'yyyy-MM-dd HH:mm')}">
                             </p>
                         </div>
                     </div>
 
-                    <!-- 최종 승인 액션: 타임라인의 마지막 노드로 표시 -->
+                    <!-- 최종 확인(승인/수정요청): SUBMITTED일 때 -->
                     <div th:if="${order.orderStatus.trim().equals('SUBMITTED')}" class="timeline-item">
                         <div class="timeline-dot dot-pending"></div>
                         <div class="timeline-content">
-                            <div class="timeline-label">최종 승인</div>
+                            <div class="timeline-label">최종 확인</div>
 
                             <div th:if="${isBuyer}">
-                                <p class="timeline-text">작업물을 확인하고 최종 승인해주세요.</p>
-                                <form th:action="@{|/order/approve/${order.orderId}|}" method="post"
-                                    onsubmit="return confirm('작업물을 승인하시겠습니까? 승인 후에는 되돌릴 수 없습니다.');">
-                                    <button type="submit" class="btn-notice-action">최종 승인</button>
+                                <p class="timeline-text">작업물을 확인하고 승인하거나 수정을 요청해주세요.</p>
+                                <div class="action-btn-row">
+                                    <form th:action="@{|/order/approve/${order.orderId}|}" method="post"
+                                        onsubmit="return confirm('작업물을 승인하시겠습니까? 승인 후에는 되돌릴 수 없습니다.');">
+                                        <button type="submit" class="btn-notice-action">최종 승인</button>
+                                    </form>
+                                    <button type="button" class="btn-sub"
+                                        onclick="document.getElementById('revisionForm').style.display='block'">수정
+                                        요청</button>
+                                </div>
+                                <form id="revisionForm" th:action="@{|/order/revision/${order.orderId}|}" method="post"
+                                    class="revision-form">
+                                    <textarea name="content" required placeholder="수정이 필요한 부분을 남겨주세요."
+                                        class="revision-textarea"></textarea>
+                                    <button type="submit" class="btn-sub revision-submit-btn">수정 요청 보내기</button>
                                 </form>
                             </div>
 
                             <div th:if="${isWriter}">
-                                <p class="timeline-text">의뢰인의 최종 승인을 기다리는 중입니다.</p>
-                                <button type="button" class="btn-notice-action btn-disabled" disabled>승인 대기중</button>
+                                <p class="timeline-text">의뢰인의 최종 확인을 기다리는 중입니다.</p>
+                                <button type="button" class="btn-notice-action btn-disabled" disabled>확인 대기중</button>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- 수정 작업중: REVISION_REQUESTED일 때 -->
+                    <div th:if="${order.orderStatus.trim().equals('REVISION_REQUESTED')}" class="timeline-item">
+                        <div class="timeline-dot dot-pending"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-label">수정 작업중</div>
+                            <p class="timeline-text" th:if="${isWriter}">의뢰인의 수정 요청을 반영해 재제출해주세요.</p>
+                            <p class="timeline-text" th:if="${isBuyer}">작가가 수정 작업을 진행 중입니다.</p>
                         </div>
                     </div>
                 </div>
@@ -171,7 +206,8 @@
         </div>
 
         <!-- 파일 첨부 제출 폼 -->
-        <div th:if="${isWriter and order.orderStatus.trim().equals('PROCESSING')}" class="action-section">
+        <div th:if="${isWriter and (order.orderStatus.trim().equals('PROCESSING') or order.orderStatus.trim().equals('REVISION_REQUESTED'))}"
+            class="action-section">
             <form th:action="@{|/order/submit/${order.orderId}|}" method="post" enctype="multipart/form-data">
                 <div class="form-group">
                     <label>작업물 설명</label>
@@ -179,7 +215,11 @@
                 </div>
                 <div class="form-group">
                     <label>파일 첨부</label>
-                    <input type="file" name="files" multiple>
+                    <input type="file" id="fileInput" multiple style="display:none;">
+                    <button type="button" class="btn-sub" onclick="document.getElementById('fileInput').click()">
+                        + 파일 선택
+                    </button>
+                    <div id="fileList" class="file-preview-list"></div>
                 </div>
                 <div class="action-btn-row">
                     <button type="submit" class="btn-primary">작업물 제출</button>
@@ -231,6 +271,58 @@
                     alert("결제 요청 중 문제가 발생했습니다.");
                 }
             }
+
+
+
+            // 첨부파일 중복 등록 / 취소 로직
+            let selectedFiles = [];
+
+            document.getElementById('fileInput').addEventListener('change', function (e) {
+                // 새로 고른 파일들을 기존 배열에 누적
+                for (const file of e.target.files) {
+                    selectedFiles.push(file);
+                }
+                renderFileList();
+                e.target.value = ''; // 같은 파일 다시 선택 가능하도록 초기화
+            });
+
+            function renderFileList() {
+                const listEl = document.getElementById('fileList');
+                listEl.innerHTML = '';
+                selectedFiles.forEach((file, index) => {
+                    const item = document.createElement('div');
+                    item.className = 'file-preview-item';
+                    item.innerHTML = `
+            <span class="file-preview-name">${file.name}</span>
+            <button type="button" class="file-preview-remove" data-index="${index}">×</button>
+        `;
+                    listEl.appendChild(item);
+                });
+
+                // X 버튼 클릭 시 해당 파일 제거
+                listEl.querySelectorAll('.file-preview-remove').forEach(btn => {
+                    btn.addEventListener('click', function () {
+                        selectedFiles.splice(Number(this.dataset.index), 1);
+                        renderFileList();
+                    });
+                });
+            }
+
+            // 폼 제출 직전, selectedFiles를 실제 input에 채워넣기
+            document.querySelector('form[action*="/order/submit/"]').addEventListener('submit', function (e) {
+                const dataTransfer = new DataTransfer();
+                selectedFiles.forEach(file => dataTransfer.items.add(file));
+
+                // 기존 fileInput은 숨겨져 있으니, 실제 전송용 input을 새로 만들어 붙임
+                const hiddenInput = document.createElement('input');
+                hiddenInput.type = 'file';
+                hiddenInput.name = 'files';
+                hiddenInput.multiple = true;
+                hiddenInput.style.display = 'none';
+                hiddenInput.files = dataTransfer.files;
+
+                this.appendChild(hiddenInput);
+            });
         </script>
     </main>
 

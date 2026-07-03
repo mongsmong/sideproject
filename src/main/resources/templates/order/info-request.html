@@ -1,12 +1,15 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
+
 <head th:replace="~{fragments/common :: head('신청 내역 확인')}"></head>
+
 <body>
     <header th:replace="~{fragments/common :: header}"></header>
     <main class="container">
         <div class="info-card">
             <div class="info-header">
                 <h3>신청 내역</h3>
+                <span class="info-header-date" th:text="${#temporals.format(request.regDate, 'yyyy-MM-dd')}"></span>
             </div>
             <div class="info-body">
                 <div class="info-row">
@@ -41,4 +44,5 @@
     </main>
     <footer th:replace="~{fragments/common :: footer}"></footer>
 </body>
+
 </html>

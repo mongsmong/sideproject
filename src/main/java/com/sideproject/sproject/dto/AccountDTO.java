@@ -15,7 +15,8 @@ public class AccountDTO {
     private String username;
     private String password;
     private String nickname;
+    private String profileImageUrl;
     private String email;
     private AccountRole role;
-    
+
 }

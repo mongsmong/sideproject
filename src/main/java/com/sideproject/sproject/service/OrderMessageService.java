@@ -64,6 +64,7 @@ public class OrderMessageService {
                                 .orderId(attach.getOrderId().getOrderId())
                                 .senderUsername(attach.getSenderId().getUsername())
                                 .senderNickname(attach.getSenderId().getNickname())
+                                .senderProfileImageUrl(attach.getSenderId().getProfileImageUrl())
                                 .content(attach.getContent())
                                 .messageType(attach.getMessageType())
                                 .requestDeadline(attach.getRequestDeadline())

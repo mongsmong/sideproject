@@ -1,11 +1,20 @@
 package com.sideproject.sproject.service;
 
+import static org.springframework.security.core.userdetails.User.builder;
+
+import java.io.IOException;
+import java.util.Map;
+
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import static org.springframework.security.core.userdetails.User.builder;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
 import com.sideproject.sproject.common.AccountRole;
 import com.sideproject.sproject.dto.AccountDTO;
 import com.sideproject.sproject.entity.Account;
@@ -18,6 +27,7 @@ import lombok.RequiredArgsConstructor;
 public class AccountService implements UserDetailsService {
     private final AccountRepository accountRepository;
     private final PasswordEncoder passwordEncoder; // 반드시 final로 선언됨
+    private final Cloudinary cloudinary;
 
     // 관리자 계정 생성 메소드
     public void creatAdmin() {
@@ -64,4 +74,39 @@ public class AccountService implements UserDetailsService {
                 .roles(account.getRole().name().replace("ROLE_", "")) // ROLE_ 접두사 제거
                 .build();
     }
+
+    // 프로필 정보 가져오기 
+    public AccountDTO getMyInfo(String username) {
+        Account account = accountRepository.findByUsername(username)
+            .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
+
+            return AccountDTO.builder()
+                            .username(account.getUsername())
+                            .nickname(account.getNickname())
+                            .email(account.getEmail())
+                            .profileImageUrl(account.getProfileImageUrl())
+                            .build();
+    }
+
+    // 프로필 업데이트
+    @Transactional
+    public void updateMyinfo(String username, String nickname, String email, MultipartFile profileImage) throws IOException{
+        Account account = accountRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
+
+        account.setNickname(nickname);
+        account.setEmail(email);
+
+        if(profileImage != null && !profileImage.isEmpty()) {
+            Map uploadResult = cloudinary.uploader().upload(
+                profileImage.getBytes(),
+                ObjectUtils.asMap("resource_type", "image")
+            );
+
+            String imageUrl = (String) uploadResult.get("secure_url");
+            account.setProfileImageUrl(imageUrl);
+        }
+        accountRepository.save(account);
+    }
+
 }

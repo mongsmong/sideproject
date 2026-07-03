@@ -23,12 +23,15 @@ public class OrderDTO {
     private Long boardId;       // 게시글 ID
     private String boardTitle;  // 게시글 제목
     private String boardWriterUsername; // 추가: principal.getName()과 비교할 필드
+    private String boardWriterProfileImageUrl;
     private String orderTitle;
 
     // 3. 구매자 정보
     private Long buyerId;       // 구매자 ID
     private String buyerNickname; // 구매자 닉네임
     private String buyerUsername;      // 추가: principal.getName()과 비교할 필드
+    private String buyerProfileImageUrl;
+
 
     // 4. 상세 내용 및 상태
     private String content;     // 요구사항
