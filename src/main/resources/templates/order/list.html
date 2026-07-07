@@ -11,7 +11,7 @@
         <div th:each="order : ${orderList}" class="chat-room-wrapper"
             style="border-bottom: 1px solid #eee; padding: 10px;">
 
-            <a th:href="@{/order/detail/{id}(id=${order.orderId})}" class="chat-room-item"
+            <a th:href="@{/order/detail/{id}(id=${order.chatRoomId})}" class="chat-room-item"
                 style="text-decoration: none; color: inherit;">
 
                 <div class="room-top">

@@ -13,13 +13,16 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
+import com.sideproject.sproject.dto.ChatRoomDTO;
 import com.sideproject.sproject.dto.OrderDTO;
 import com.sideproject.sproject.entity.Account;
 import com.sideproject.sproject.entity.Board;
+import com.sideproject.sproject.entity.ChatRoom;
 import com.sideproject.sproject.entity.Order;
 import com.sideproject.sproject.entity.OrderFile;
 import com.sideproject.sproject.entity.OrderMessage;
 import com.sideproject.sproject.repository.AccountRepository;
+import com.sideproject.sproject.repository.ChatRoomRepository;
 import com.sideproject.sproject.repository.OrderFileRepository;
 import com.sideproject.sproject.repository.OrderMessageRepository;
 import com.sideproject.sproject.repository.OrderRepository;
@@ -34,54 +37,42 @@ public class OrderService {
         private final OrderMessageRepository orderMessageRepository;
         private final AccountRepository accountRepository;
         private final OrderFileRepository orderFileRepository;
+        private final ChatRoomRepository chatRoomRepository;
 
         @Transactional
         public Long saveOrder(OrderDTO dto, Board board, Account buyer) {
 
-                Optional<Order> existingOrder = orderRepository.findByBoardId_BoardIdAndBuyerId_AccountId(
-                                board.getBoardId(), buyer.getAccountId());
+                // 1. 채팅방 찾기 또는 생성 (게시글+의뢰인당 하나만 유지)
+                ChatRoom chatRoom = chatRoomRepository.findByBoardId_BoardIdAndBuyerId_AccountId(
+                                board.getBoardId(), buyer.getAccountId())
+                                .orElseGet(() -> chatRoomRepository.save(
+                                                ChatRoom.builder()
+                                                                .boardId(board)
+                                                                .buyerId(buyer)
+                                                                .build()));
 
-                Order order;
-                boolean isNewEngagement;
-
-                if (existingOrder.isPresent()) {
-                        order = existingOrder.get();
-                        isNewEngagement = "COMPLETED".equals(order.getOrderStatus())
-                                        || "CANCELED".equals(order.getOrderStatus());
-                } else {
-                        order = null;
-                        isNewEngagement = true;
-                }
-
-                // 새로운 거래를 시작하는 경우에만 슬롯 체크
-                if (isNewEngagement) {
-                        Account writer = board.getAccount();
-                        if (writer.getMaxSlots() != null && !writer.isAllowOverbooking()) {
-                                long activeCount = orderRepository.countActiveOrdersByWriter(writer.getAccountId());
-                                if (activeCount >= writer.getMaxSlots()) {
-                                        throw new IllegalStateException("작가의 작업 슬롯이 가득 찼습니다. 나중에 다시 시도해주세요.");
-                                }
+                // 2. 슬롯 체크 (신청마다 매번 체크, 새 거래니까)
+                Account writer = board.getAccount();
+                if (writer.getMaxSlots() != null && !writer.isAllowOverbooking()) {
+                        long activeCount = orderRepository.countActiveOrdersByWriter(writer.getAccountId());
+                        if (activeCount >= writer.getMaxSlots()) {
+                                throw new IllegalStateException("작가의 작업 슬롯이 가득 찼습니다. 나중에 다시 시도해주세요.");
                         }
                 }
 
-                if (order == null) {
-                        order = Order.builder()
-                                        .boardId(board)
-                                        .buyerId(buyer)
-                                        .content(dto.getContent())
-                                        .deadline(dto.getDeadline())
-                                        .totalPrice(dto.getTotalPrice())
-                                        .orderStatus("REQUEST")
-                                        .build();
-                        orderRepository.save(order);
-                } else if (isNewEngagement) {
-                        order.setOrderStatus("REQUEST");
-                        order.setContent(dto.getContent());
-                        order.setDeadline(dto.getDeadline());
-                        order.setTotalPrice(dto.getTotalPrice());
-                        order.setOrderTitle(null);
-                }
+                // 3. 신청할 때마다 항상 새로운 Order(거래) 생성
+                Order order = Order.builder()
+                                .chatRoom(chatRoom)
+                                .boardId(board)
+                                .buyerId(buyer)
+                                .content(dto.getContent())
+                                .deadline(dto.getDeadline())
+                                .totalPrice(dto.getTotalPrice())
+                                .orderStatus("REQUEST")
+                                .build();
+                orderRepository.save(order);
 
+                // 4. 신청 알림 메시지 저장 (이 Order에 귀속)
                 OrderMessage newRequestMsg = OrderMessage.builder()
                                 .orderId(order)
                                 .senderId(buyer)
@@ -92,7 +83,7 @@ public class OrderService {
                                 .build();
                 orderMessageRepository.save(newRequestMsg);
 
-                return order.getOrderId();
+                return chatRoom.getChatRoomId();
         }
 
         // 의뢰 수락
@@ -120,23 +111,63 @@ public class OrderService {
                 orderMessageRepository.save(approveMsg);
         }
 
+        // 채팅방 조회
+        public ChatRoomDTO getChatRoomDetail(Long chatRoomId) {
+                ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
+                                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 채팅방입니다."));
+
+                return ChatRoomDTO.builder()
+                                .chatRoomId(chatRoom.getChatRoomId())
+                                .boardId(chatRoom.getBoardId().getBoardId())
+                                .boardTitle(chatRoom.getBoardId().getTitle())
+                                .boardWriterUsername(chatRoom.getBoardId().getAccount().getUsername())
+                                .boardWriterProfileImageUrl(chatRoom.getBoardId().getAccount().getProfileImageUrl())
+                                .buyerUsername(chatRoom.getBuyerId().getUsername())
+                                .buyerNickname(chatRoom.getBuyerId().getNickname())
+                                .buyerProfileImageUrl(chatRoom.getBuyerId().getProfileImageUrl())
+                                .build();
+        }
+
         // 회원의 주문 내역 목록 조회
         public List<OrderDTO> getOrderList(String username) {
-                // 의뢰인+작성자 주문 리스트 조회
-                List<Order> buyerOrders = orderRepository.findByBuyerId_Username(username);
-                List<Order> sellerOrders = orderRepository.findByBoardId_Account_Username(username);
-                buyerOrders.addAll(sellerOrders);
+                List<ChatRoom> buyerRooms = chatRoomRepository.findByBuyerId_Username(username);
+                List<ChatRoom> writerRooms = chatRoomRepository.findByBoardId_Account_Username(username);
 
-                // 전체 주문 리스트를 DTO로 변환하여 반환
-                return buyerOrders.stream()
-                                .distinct() // 중복 제거
-                                .map(this::toDTO)
+                buyerRooms.addAll(writerRooms);
+
+                return buyerRooms.stream()
+                                .distinct()
+                                .map(room -> {
+                                        Order latestOrder = orderRepository
+                                                        .findTopByChatRoom_ChatRoomIdOrderByRegDateDesc(
+                                                                        room.getChatRoomId())
+                                                        .orElse(null);
+
+                                        LocalDateTime lastMsgDate = orderMessageRepository
+                                                        .findLastMessageDateByChatRoom(room.getChatRoomId());
+
+                                        return OrderDTO.builder()
+                                                        .chatRoomId(room.getChatRoomId())
+                                                        .boardTitle(room.getBoardId().getTitle())
+                                                        .boardWriterUsername(
+                                                                        room.getBoardId().getAccount().getUsername())
+                                                        .boardWriterProfileImageUrl(room.getBoardId().getAccount()
+                                                                        .getProfileImageUrl())
+                                                        .buyerUsername(room.getBuyerId().getUsername())
+                                                        .buyerNickname(room.getBuyerId().getNickname())
+                                                        .buyerProfileImageUrl(room.getBuyerId().getProfileImageUrl())
+                                                        .orderStatus(latestOrder != null ? latestOrder.getOrderStatus()
+                                                                        : "REQUEST")
+                                                        .regDate(room.getRegDate())
+                                                        .lastMessageDate(lastMsgDate)
+                                                        .build();
+                                })
                                 .sorted((a, b) -> {
                                         LocalDateTime dateA = a.getLastMessageDate() != null ? a.getLastMessageDate()
-                                                            : a.getRegDate();
+                                                        : a.getRegDate();
                                         LocalDateTime dateB = b.getLastMessageDate() != null ? b.getLastMessageDate()
-                                                            : b.getRegDate();
-                                        return dateB.compareTo(dateA); // 최신 채팅이 위로
+                                                        : b.getRegDate();
+                                        return dateB.compareTo(dateA);
                                 })
                                 .collect(Collectors.toList());
         }
@@ -301,7 +332,7 @@ public class OrderService {
                                                 : order.getBoardId().getTitle())
                                 .boardWriterUsername(order.getBoardId().getAccount().getUsername()) // 판매자
                                 .boardWriterProfileImageUrl(order.getBoardId().getAccount().getProfileImageUrl())
-
+                                .chatRoomId(order.getChatRoom() != null ? order.getChatRoom().getChatRoomId() : null)
                                 .buyerUsername(order.getBuyerId().getUsername()) // 구매자
                                 .buyerNickname(order.getBuyerId().getNickname())
                                 .buyerProfileImageUrl(order.getBuyerId().getProfileImageUrl())

@@ -67,8 +67,10 @@
             <a th:each="board : ${boards.content}" th:href="@{/board/detail/{id}(id=${board.boardId})}"
                 class="board-card">
 
-                <div class="card-img">
-                    <img src="https://placehold.co/300x200?text=No+Image" alt="썸네일">
+                <div class="card-img" style="position: relative;">
+                    <img th:if="${board.thumbnailUrl != null}" th:src="${board.thumbnailUrl}" alt="썸네일">
+                    <img th:unless="${board.thumbnailUrl != null}" src="https://placehold.co/300x200?text=No+Image"
+                        alt="썸네일">
                     <span th:if="${board.postStatus == 'OFF'}" class="closed-badge">마감</span>
                 </div>
 
@@ -81,10 +83,8 @@
                     </div>
 
                     <div class="hashtag">
-                        <span th:each="tag : ${#strings.arraySplit(board.hashtag, ' ')}" 
-                            　th:if="${!tag.isEmpty()}"
-                           　 th:text="'#' + ${tag}" 
-                           　class="hashtag-item small"></span>
+                        <span th:each="tag : ${#strings.arraySplit(board.hashtag, ' ')}" 　th:if="${!tag.isEmpty()}" 　
+                            th:text="'#' + ${tag}" 　class="hashtag-item small"></span>
                     </div>
 
                     <div class="writer" th:text="${board.writerNickname}"></div>

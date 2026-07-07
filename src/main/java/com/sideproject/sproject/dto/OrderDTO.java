@@ -25,6 +25,7 @@ public class OrderDTO {
     private String boardWriterUsername; // 추가: principal.getName()과 비교할 필드
     private String boardWriterProfileImageUrl;
     private String orderTitle;
+    private Long chatRoomId;
 
     // 3. 구매자 정보
     private Long buyerId;       // 구매자 ID

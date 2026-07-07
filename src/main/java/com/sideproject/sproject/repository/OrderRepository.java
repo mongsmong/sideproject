@@ -29,4 +29,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     // 글에 대한 작업수
     @Query("SELECT COUNT(o) FROM Order o WHERE o.boardId.boardId = :boardId AND o.orderStatus = 'COMPLETED'")
     long countCompletedOrdersByBoard(@Param("boardId") Long boardId);
+
+    // 채팅방 최신 거래 조회
+    Optional<Order> findTopByChatRoom_ChatRoomIdOrderByRegDateDesc(Long chatRoomId);
 }

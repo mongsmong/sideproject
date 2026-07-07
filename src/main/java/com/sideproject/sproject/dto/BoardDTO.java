@@ -25,6 +25,8 @@ public class BoardDTO {
     private LocalDateTime regDate; // 리스트/상세 페이지에 필요
     private List<String> questionTitles;
     private String postType;
+    private List<BoardFileDTO> files;
+    private String thumbnailUrl; // 글 섬네일
  
 
     // 작성자 관련 정보 (화면 표시 및 로직용)

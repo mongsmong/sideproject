@@ -52,4 +52,10 @@ public class Order {
     @Column
     private LocalDateTime modifiedDate; // 주문 상태 변경 일시
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "chat_room_id")
+    private ChatRoom chatRoom;
+    
+
+
 }

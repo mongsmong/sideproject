@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.data.domain.Sort;
 import com.sideproject.sproject.dto.BoardDTO;
@@ -17,6 +18,8 @@ import com.sideproject.sproject.entity.Account;
 import com.sideproject.sproject.repository.AccountRepository;
 import com.sideproject.sproject.repository.OrderRepository;
 import com.sideproject.sproject.service.BoardService;
+
+import java.io.IOException;
 import java.security.Principal;
 import java.util.List;
 
@@ -59,29 +62,16 @@ public class BoardController {
 
     // 게시글 등록 처리
     @PostMapping("/register")
-    public String register(BoardDTO dto, Principal principal) {
-        String username = principal.getName();
-
-        Account writer = accountRepository.findByUsername(username)
+    public String register(BoardDTO dto,
+            @RequestParam(required = false) List<MultipartFile> attachments,
+            Principal principal) throws IOException {
+        Account writer = accountRepository.findByUsername(principal.getName())
                 .orElseThrow(() -> new IllegalArgumentException("로그인한 사용자를 찾을 수 없습니다."));
-
-        boardService.saveBoard(dto, writer);
+        boardService.saveBoard(dto, writer, attachments);
         return "redirect:/board/list";
     }
 
-    // 게시글 상세 페이지
-    @GetMapping("/detail/{boardId}")
-    public String detail(@PathVariable Long boardId, Model model) {
-        BoardDTO board = boardService.getBoardById(boardId);
-        long completedCount = orderRepository.countCompletedOrdersByBoard(boardId);
-
-        model.addAttribute("board", board);
-        model.addAttribute("completedCount", completedCount);
-
-        return "board/detail";
-    }
-
-    // 게시글 수정
+    // 수정 처리
     @GetMapping("/edit/{boardId}")
     public String editForm(@PathVariable Long boardId, Principal principal, Model model) {
         BoardDTO board = boardService.getBoardById(boardId);
@@ -94,10 +84,25 @@ public class BoardController {
         return "board/edit";
     }
 
+    // 수정
     @PostMapping("/edit/{boardId}")
-    public String edit(@PathVariable Long boardId, BoardDTO dto, Principal principal) {
-        boardService.updateBoard(boardId, dto, principal.getName());
+    public String edit(@PathVariable Long boardId, BoardDTO dto,
+            @RequestParam(required = false) List<MultipartFile> attachments,
+            Principal principal) throws IOException {
+        boardService.updateBoard(boardId, dto, principal.getName(), attachments);
         return "redirect:/account/profile/" + principal.getName();
+    }
+
+    // 게시글 상세 페이지
+    @GetMapping("/detail/{boardId}")
+    public String detail(@PathVariable Long boardId, Model model) {
+        BoardDTO board = boardService.getBoardById(boardId);
+        long completedCount = orderRepository.countCompletedOrdersByBoard(boardId);
+
+        model.addAttribute("board", board);
+        model.addAttribute("completedCount", completedCount);
+
+        return "board/detail";
     }
 
     // 신청 접수 on/off

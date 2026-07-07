@@ -12,7 +12,8 @@
                 <h3>게시글 수정</h3>
             </div>
 
-            <form th:action="@{|/board/edit/${board.boardId}|}" method="post" class="styled-form">
+            <form th:action="@{|/board/edit/${board.boardId}|}" method="post" class="styled-form"
+                enctype="multipart/form-data">
 
                 <div class="form-group">
                     <label>제목</label>
@@ -32,6 +33,15 @@
                 </div>
 
                 <div class="form-group">
+                    <label>샘플 이미지/영상 첨부</label>
+                    <input type="file" id="fileInput" multiple accept="image/*,video/*" style="display:none;">
+                    <button type="button" class="btn-sub" onclick="document.getElementById('fileInput').click()">
+                        + 파일 선택
+                    </button>
+                    <div id="fileList" class="file-preview-list"></div>
+                </div>
+
+                <div class="form-group">
                     <label>기본 가격 (원)</label>
                     <input type="number" name="basePrice" th:value="${board.basePrice}" placeholder="예: 50000" required>
                 </div>
@@ -43,7 +53,8 @@
 
                 <div class="form-group">
                     <label>게시글 상세 내용</label>
-                    <textarea name="content" placeholder="게시글에 대한 설명을 적으세요" required th:text="${board.content}"></textarea>
+                    <textarea name="content" placeholder="게시글에 대한 설명을 적으세요" required
+                        th:text="${board.content}"></textarea>
                 </div>
 
                 <div class="action-btn-row">
@@ -54,7 +65,52 @@
             </form>
         </div>
     </main>
+    <script>
+        let selectedFiles = [];
 
+        document.getElementById('fileInput').addEventListener('change', function (e) {
+            for (const file of e.target.files) {
+                selectedFiles.push(file);
+            }
+            renderFileList();
+            e.target.value = '';
+        });
+
+        function renderFileList() {
+            const listEl = document.getElementById('fileList');
+            listEl.innerHTML = '';
+            selectedFiles.forEach((file, index) => {
+                const item = document.createElement('div');
+                item.className = 'file-preview-item';
+                item.innerHTML = `
+                <span class="file-preview-name">${file.name}</span>
+                <button type="button" class="file-preview-remove" data-index="${index}">×</button>
+            `;
+                listEl.appendChild(item);
+            });
+
+            listEl.querySelectorAll('.file-preview-remove').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    selectedFiles.splice(Number(this.dataset.index), 1);
+                    renderFileList();
+                });
+            });
+        }
+
+        document.querySelector('form[action*="/board/edit/"]').addEventListener('submit', function (e) {
+            const dataTransfer = new DataTransfer();
+            selectedFiles.forEach(file => dataTransfer.items.add(file));
+
+            const hiddenInput = document.createElement('input');
+            hiddenInput.type = 'file';
+            hiddenInput.name = 'attachments';
+            hiddenInput.multiple = true;
+            hiddenInput.style.display = 'none';
+            hiddenInput.files = dataTransfer.files;
+
+            this.appendChild(hiddenInput);
+        });
+    </script>
     <footer th:replace="~{fragments/common :: footer}"></footer>
 </body>
 

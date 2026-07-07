@@ -1,11 +1,26 @@
 package com.sideproject.sproject.service;
 
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
 import com.sideproject.sproject.dto.BoardDTO;
+import com.sideproject.sproject.dto.BoardFileDTO;
+import com.sideproject.sproject.dto.OrderDTO;
 import com.sideproject.sproject.entity.Account;
 import com.sideproject.sproject.entity.Board;
+import com.sideproject.sproject.entity.BoardFile;
+import com.sideproject.sproject.entity.ChatRoom;
+import com.sideproject.sproject.entity.Order;
+import com.sideproject.sproject.entity.OrderMessage;
+import com.sideproject.sproject.repository.BoardFileRepository;
 import com.sideproject.sproject.repository.BoardRepository;
+import com.sideproject.sproject.repository.ChatRoomRepository;
+
+import com.sideproject.sproject.repository.OrderMessageRepository;
+import com.sideproject.sproject.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
+
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -14,23 +29,26 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class BoardService {
 
+    private final OrderMessageRepository orderMessageRepository;
+    private final OrderRepository orderRepository;
     private final BoardRepository boardRepository;
+    private final ChatRoomRepository chatRoomRepository;
+    private final BoardFileRepository boardFileRepository;
+    private final Cloudinary cloudinary;
 
-    // 게시글 등록
+    // 게시글 작성
+
     @Transactional
-    public int saveBoard(BoardDTO boardDTO, Account writer) { // Account를 파라미터로 받음
+    public int saveBoard(BoardDTO boardDTO, Account writer, List<MultipartFile> files) throws IOException {
         String hashtag = boardDTO.getHashtag() != null ? boardDTO.getHashtag().trim() : null;
-        String type = "OFFER";
-
-        if ("구해요".equals(boardDTO.getCategory())) {
-            type = "REQUEST";
-        }
+        String type = "구해요".equals(boardDTO.getCategory()) ? "REQUEST" : "OFFER";
 
         Board board = Board.builder()
                 .title(boardDTO.getTitle())
@@ -39,20 +57,47 @@ public class BoardService {
                 .hashtag(hashtag)
                 .postType(type)
                 .basePrice(boardDTO.getBasePrice())
-                .account(writer) // 여기서 Account 객체를 넘겨주면 JPA가 writer_id 컬럼에 알아서 ID를 넣음
-                .postStatus("ON") // 빌더에 기본값 외에 명시할 것이 있다면 여기서 처리
+                .account(writer)
+                .postStatus("ON")
                 .build();
-        // 게시글 데이터 JPA를 이용하여 DB에 저장
-        // board에 attachs 엔티티가 적용되어 있으므로
-        // board 테이블 insert와 attach 테이블의 insert가
-        // 한 번에 실행됨(JPA 연결 특성으로 인해)
+
         boardRepository.save(board);
+        uploadBoardFiles(board, files);
+
         return 1;
+    }
+
+    private void uploadBoardFiles(Board board, List<MultipartFile> files) throws IOException {
+        if (files == null)
+            return;
+
+        for (MultipartFile file : files) {
+            if (file.isEmpty())
+                continue;
+
+            Map uploadResult = cloudinary.uploader().upload(
+                    file.getBytes(),
+                    ObjectUtils.asMap("resource_type", "auto"));
+
+            String fileUrl = (String) uploadResult.get("secure_url");
+            String storedName = (String) uploadResult.get("public_id");
+
+            BoardFile boardFile = BoardFile.builder()
+                    .board(board)
+                    .originalName(file.getOriginalFilename())
+                    .storedName(storedName)
+                    .filePath(fileUrl)
+                    .fileSize(file.getSize())
+                    .contentType(file.getContentType())
+                    .build();
+            boardFileRepository.save(boardFile);
+        }
     }
 
     // 게시글 수정
     @Transactional
-    public void updateBoard(Long boardId, BoardDTO dto, String username) {
+    public void updateBoard(Long boardId, BoardDTO dto, String username, List<MultipartFile> newFiles)
+            throws IOException {
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 게시글입니다."));
 
@@ -69,9 +114,9 @@ public class BoardService {
         board.setHashtag(hashtag);
         board.setPostType(type);
         board.setBasePrice(dto.getBasePrice());
-        // postStatus는 마감 토글 기능(togglePostStatus)이 따로 있으니 여기선 건드리지 않음
 
         boardRepository.save(board);
+        uploadBoardFiles(board, newFiles); // 수정 시에도 추가 첨부 가능 (기존 파일 유지)
     }
 
     // 전체 게시글 조회(페이징 처리)
@@ -119,8 +164,6 @@ public class BoardService {
         return toDTO(board);
     }
 
-
-
     // 게시글 상태 토글 (ON <-> OFF)
     @Transactional
     public void togglePostStatus(Long boardId, String username) {
@@ -135,8 +178,7 @@ public class BoardService {
         boardRepository.save(board);
     }
 
-
-     // 인기 해시태그 조회
+    // 인기 해시태그 조회
     public List<String> getPopularHashtags() {
         List<String> allHashtagStrings = boardRepository.findAllHashtagStrings();
 
@@ -152,19 +194,35 @@ public class BoardService {
                 .collect(Collectors.toList());
     }
 
-    // Board -> BoardDTO 변경 메소드
     private BoardDTO toDTO(Board board) {
         Long writerId = null;
         String writerNickname = "알수없음";
         String writerUsername = "알수없음";
+        String writerProfileImageUrl = null;
 
-        // board.getAccount()가 null이 아닌 경우에만 안전하게 정보 추출
         if (board.getAccount() != null) {
-            // 테이블 설계상 PK가 accountid이므로 getAccountId() 호출
             writerId = board.getAccount().getAccountId();
             writerNickname = board.getAccount().getNickname();
             writerUsername = board.getAccount().getUsername();
+            writerProfileImageUrl = board.getAccount().getProfileImageUrl();
         }
+
+        List<BoardFile> boardFiles = boardFileRepository.findByBoard_BoardIdOrderByFileIdAsc(board.getBoardId());
+
+        List<BoardFileDTO> fileDTOs = boardFiles.stream()
+                .map(f -> BoardFileDTO.builder()
+                        .fileId(f.getFileId())
+                        .originalName(f.getOriginalName())
+                        .filePath(f.getFilePath())
+                        .contentType(f.getContentType())
+                        .build())
+                .collect(Collectors.toList());
+
+        String thumbnail = boardFiles.stream()
+                .filter(f -> f.getContentType() != null && f.getContentType().startsWith("image"))
+                .map(BoardFile::getFilePath)
+                .findFirst()
+                .orElse(null);
 
         return BoardDTO.builder()
                 .boardId(board.getBoardId())
@@ -176,10 +234,12 @@ public class BoardService {
                 .hashtag(board.getHashtag())
                 .postStatus(board.getPostStatus())
                 .regDate(board.getRegDate())
-                .writerId(board.getAccount().getAccountId())
-                .writerNickname(board.getAccount().getNickname())
-                .writerUsername(board.getAccount().getUsername())
-                .writerProfileImageUrl(board.getAccount().getProfileImageUrl())
+                .writerId(writerId)
+                .writerNickname(writerNickname)
+                .writerUsername(writerUsername)
+                .writerProfileImageUrl(writerProfileImageUrl)
+                .files(fileDTOs)
+                .thumbnailUrl(thumbnail)
                 .build();
     }
 }

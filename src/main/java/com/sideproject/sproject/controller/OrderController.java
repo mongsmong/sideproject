@@ -18,6 +18,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.sideproject.sproject.common.AccountRole;
 import com.sideproject.sproject.dto.BoardDTO;
+import com.sideproject.sproject.dto.ChatRoomDTO;
 import com.sideproject.sproject.dto.OrderDTO;
 import com.sideproject.sproject.dto.OrderMessageDTO;
 import com.sideproject.sproject.entity.Account;
@@ -51,12 +52,12 @@ public class OrderController {
     // 주문 만들기 (중복 방지 & 소통창 바로 가기)
     @PostMapping("/create/{boardId}")
     public String createOrder(@PathVariable Long boardId, OrderDTO dto, Principal principal,
-                                RedirectAttributes redirectAttributes) {
+            RedirectAttributes redirectAttributes) {
         // 로그인 사용자 정보 체크
         if (principal == null) {
             return "redirect:/auth/login";
         }
-//        System.out.println("프론트에서 넘어온 DTO: " + dto.toString());
+        // System.out.println("프론트에서 넘어온 DTO: " + dto.toString());
 
         Board board = boardRepository.findById(dto.getBoardId())
                 .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다."));
@@ -70,16 +71,15 @@ public class OrderController {
             throw new IllegalStateException("신청 권한이 없습니다.");
         }
 
-        
         // 4. 저장 및 중복 체크
-       
-    try {
-        Long orderId = orderService.saveOrder(dto, board, buyer);
-        return "redirect:/order/detail/" + orderId;
-    } catch (IllegalStateException e) {
-        redirectAttributes.addFlashAttribute("errorMsg", e.getMessage());
-        return "redirect:/board/detail/" + boardId;
-    }
+
+        try {
+            Long chatRoomId = orderService.saveOrder(dto, board, buyer);
+            return "redirect:/order/detail/" + chatRoomId;
+        } catch (IllegalStateException e) {
+            redirectAttributes.addFlashAttribute("errorMsg", e.getMessage());
+            return "redirect:/board/detail/" + boardId;
+        }
 
     }
 
@@ -87,7 +87,7 @@ public class OrderController {
     @PostMapping("/cancel/{orderId}")
     public String cancelOrder(@PathVariable Long orderId, Principal principal) {
         orderService.cancelOrder(orderId, principal.getName());
-        return "redirect:/order/detail/" + orderId;
+        return "redirect:/order/info/" + orderId;
     }
 
     // 주문 내역 목록 화면
@@ -106,28 +106,32 @@ public class OrderController {
     }
 
     // 의뢰창
-    @GetMapping("/detail/{orderId}")
-    public String orderDetail(@PathVariable Long orderId, Principal principal, Model model) {
-        OrderDTO orderDTO = orderService.getOrderDetail(orderId);
-        List<OrderMessageDTO> messages = orderMessageService.getMessages(orderId);
+    @GetMapping("/detail/{chatRoomId}")
+    public String orderDetail(@PathVariable Long chatRoomId, Principal principal, Model model) {
+        ChatRoomDTO chatRoom = orderService.getChatRoomDetail(chatRoomId);
+        List<OrderMessageDTO> messages = orderMessageService.getMessagesByChatRoom(chatRoomId);
+
         String currentUsername = principal.getName();
-        boolean isBuyer = orderDTO.getBuyerUsername().equals(currentUsername);
-        boolean isWriter = orderDTO.getBoardWriterUsername().equals(currentUsername);
-        model.addAttribute("order", orderDTO); // ← 오타 수정
+        boolean isBuyer = chatRoom.getBuyerUsername().equals(currentUsername);
+        boolean isWriter = chatRoom.getBoardWriterUsername().equals(currentUsername);
+
+        model.addAttribute("room", chatRoom);
         model.addAttribute("messages", messages);
         model.addAttribute("currentUsername", currentUsername);
         model.addAttribute("isBuyer", isBuyer);
         model.addAttribute("isWriter", isWriter);
+
         return "order/detail";
     }
 
     // 메시지 전송 (OrderMessageController에서 여기로 이동)
-    @PostMapping("/detail/{orderId}/send")
-    public String sendMessage(@PathVariable Long orderId,
+    @PostMapping("/detail/{chatRoomId}/send")
+    public String sendMessage(@PathVariable Long chatRoomId,
             @RequestParam String content,
-            Principal principal) {
-        orderMessageService.sendMessage(orderId, principal.getName(), content);
-        return "redirect:/order/detail/" + orderId;
+            @RequestParam(required = false) List<MultipartFile> attachments,
+            Principal principal) throws IOException {
+        orderMessageService.sendMessage(chatRoomId, principal.getName(), content, attachments);
+        return "redirect:/order/detail/" + chatRoomId;
     }
 
     // 상세 페이지
@@ -154,7 +158,7 @@ public class OrderController {
             @RequestParam(required = false) String orderTitle,
             Principal principal) {
         orderService.confirmRequest(orderId, totalPrice, orderTitle, principal.getName());
-        return "redirect:/order/detail/" + orderId;
+        return "redirect:/order/info/" + orderId;
     }
 
     // 작업물 제출
@@ -164,7 +168,7 @@ public class OrderController {
             @RequestParam(required = false) List<MultipartFile> files,
             Principal principal) throws IOException {
         orderService.submitWork(orderId, principal.getName(), content, files);
-        return "redirect:/order/detail/" + orderId;
+        return "redirect:/order/info/" + orderId;
     }
 
     // 수정 요청
@@ -173,7 +177,7 @@ public class OrderController {
             @RequestParam String content,
             Principal principal) {
         orderService.requestRevision(orderId, principal.getName(), content);
-        return "redirect:/order/detail/" + orderId;
+        return "redirect:/order/info/" + orderId;
     }
 
     @GetMapping("/info/{orderId}/request/{messageId}")
@@ -194,6 +198,6 @@ public class OrderController {
     @PostMapping("/approve/{orderId}")
     public String approveWork(@PathVariable Long orderId, Principal principal) {
         orderService.approveWork(orderId, principal.getName());
-        return "redirect:/order/detail/" + orderId;
+        return "redirect:/order/info/" + orderId;
     }
 }

@@ -12,7 +12,7 @@
                 <h3>새로운 의뢰 게시글 등록</h3>
             </div>
 
-            <form th:action="@{/board/register}" method="post" class="styled-form">
+            <form th:action="@{/board/register}" method="post" class="styled-form" enctype="multipart/form-data">
                 <input type="hidden" name="postStatus" value="ON">
 
                 <div class="form-group">
@@ -29,8 +29,16 @@
                         <option value="음향">음향</option>
                         <option value="기타">기타</option>
                         <option value="구해요">구해요</option>
-
                     </select>
+                </div>
+
+                <div class="form-group">
+                    <label>샘플 이미지/영상 첨부</label>
+                    <input type="file" id="fileInput" multiple accept="image/*,video/*" style="display:none;">
+                    <button type="button" class="btn-sub" onclick="document.getElementById('fileInput').click()">
+                        + 파일 선택
+                    </button>
+                    <div id="fileList" class="file-preview-list"></div>
                 </div>
 
                 <div class="form-group">
@@ -65,51 +73,90 @@
                         </div>
                     </div>
                     <button type="button" class="btn-add" onclick="addField()">+ 질문 추가</button>
+                </div>
 
-                    <button type="submit" class="btn-submit-action">게시글 등록하기</button>
+                <button type="submit" class="btn-submit-action">게시글 등록하기</button>
             </form>
         </div>
     </main>
 
+    <script>
+        function addField() {
+            const container = document.getElementById('question-fields');
+            const div = document.createElement('div');
+            div.className = 'question-set';
+            div.style.cssText = 'border: 1px solid #c4b5fd; padding: 15px; border-radius: 8px; margin-bottom: 15px; position: relative; background-color: #fcfcfd;';
 
+            div.innerHTML = `
+                <button type="button" class="btn-del" onclick="removeField(this)" 
+                        style="position: absolute; top: 10px; right: 10px; background: none; border: none; cursor: pointer; color: #94a3b8; font-size: 1.2rem;">✕</button>
+                
+                <div style="margin-bottom: 8px;">
+                    <input type="text" name="questionTitles" placeholder="질문 제목을 입력하세요" required>
+                </div>
+                <div>
+                    <textarea name="questionDescriptions" placeholder="상세 설명을 입력하세요"></textarea>
+                </div>
+            `;
+            container.appendChild(div);
+        }
 
+        function removeField(btn) {
+            const sets = document.querySelectorAll('.question-set');
+            if (sets.length > 1) {
+                btn.parentElement.remove();
+            } else {
+                alert("최소 한 개의 질문 항목은 필요합니다.");
+            }
+        }
+
+        let selectedFiles = [];
+
+        document.getElementById('fileInput').addEventListener('change', function (e) {
+            for (const file of e.target.files) {
+                selectedFiles.push(file);
+            }
+            renderFileList();
+            e.target.value = '';
+        });
+
+        function renderFileList() {
+            const listEl = document.getElementById('fileList');
+            listEl.innerHTML = '';
+            selectedFiles.forEach((file, index) => {
+                const item = document.createElement('div');
+                item.className = 'file-preview-item';
+                item.innerHTML = `
+                    <span class="file-preview-name">${file.name}</span>
+                    <button type="button" class="file-preview-remove" data-index="${index}">×</button>
+                `;
+                listEl.appendChild(item);
+            });
+
+            listEl.querySelectorAll('.file-preview-remove').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    selectedFiles.splice(Number(this.dataset.index), 1);
+                    renderFileList();
+                });
+            });
+        }
+
+        document.querySelector('form[action*="/board/register"]').addEventListener('submit', function (e) {
+            const dataTransfer = new DataTransfer();
+            selectedFiles.forEach(file => dataTransfer.items.add(file));
+
+            const hiddenInput = document.createElement('input');
+            hiddenInput.type = 'file';
+            hiddenInput.name = 'attachments';
+            hiddenInput.multiple = true;
+            hiddenInput.style.display = 'none';
+            hiddenInput.files = dataTransfer.files;
+
+            this.appendChild(hiddenInput);
+        });
+    </script>
 
     <footer th:replace="~{fragments/common :: footer}"></footer>
 </body>
 
 </html>
-
-
-<!--TML의 DOM 조작(JavaScript)을 사용해서 상세입력 칸 늘리기 -->
-<script>
-    function addField() {
-        const container = document.getElementById('question-fields');
-        const div = document.createElement('div');
-        div.className = 'question-set';
-        // 박스 스타일과 위치 설정
-        div.style.cssText = 'border: 1px solid #c4b5fd; padding: 15px; border-radius: 8px; margin-bottom: 15px; position: relative; background-color: #fcfcfd;';
-
-        div.innerHTML = `
-            <button type="button" class="btn-del" onclick="removeField(this)" 
-                    style="position: absolute; top: 10px; right: 10px; background: none; border: none; cursor: pointer; color: #94a3b8; font-size: 1.2rem;">✕</button>
-            
-            <div style="margin-bottom: 8px;">
-                <input type="text" name="questionTitles" placeholder="질문 제목을 입력하세요" required>
-            </div>
-            <div>
-                <textarea name="questionDescriptions" placeholder="상세 설명을 입력하세요"></textarea>
-            </div>
-        `;
-        container.appendChild(div);
-    }
-
-    function removeField(btn) {
-        // .question-set 개수를 세서 최소 1개는 남기도록 함
-        const sets = document.querySelectorAll('.question-set');
-        if (sets.length > 1) {
-            btn.parentElement.remove(); // 버튼의 부모(div.question-set)를 삭제
-        } else {
-            alert("최소 한 개의 질문 항목은 필요합니다.");
-        }
-    }
-</script>

@@ -23,5 +23,7 @@ public class OrderMessageDTO {
     private LocalDate requestDeadline;
     private Integer requestPrice;
     private List<OrderFileDTO> files;
+    private String orderTitle;
+    private Integer totalPrice;
 
 }

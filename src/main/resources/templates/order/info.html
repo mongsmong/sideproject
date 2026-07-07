@@ -92,7 +92,7 @@
                         <button type="button" class="btn-primary"
                             th:disabled="${order.orderStatus.trim().equals('PROCESSING')}"
                             th:classappend="${order.orderStatus.trim().equals('PROCESSING')} ? 'btn-disabled' : ''"
-                            th:onclick="${order.orderStatus.trim().equals('PROCESSING')} ? '' : ('requestPayment(' + ${order.orderId} + ')')">
+                            th:onclick="${order.orderStatus.trim().equals('PROCESSING')} ? '' : ('requestPayment(' + ${order.orderId} + ', ' + ${order.chatRoomId} + ')')">
                             <span th:if="${order.orderStatus.trim().equals('PAYMENT_WAITING')}">결제하기</span>
                             <span th:if="${order.orderStatus.trim().equals('PROCESSING')}">결제 완료</span>
                         </button>
@@ -200,7 +200,7 @@
 
         <div class="btn-group">
             <button type="button" class="btn-sub"
-                th:onclick="|location.href='@{/order/detail/{id}(id=${order.orderId})}'|">
+                th:onclick="|location.href='@{/order/detail/{id}(id=${order.chatRoomId})}'|">
                 소통창으로 돌아가기
             </button>
         </div>
@@ -232,7 +232,7 @@
 
 
         <script>
-            async function requestPayment(orderId) {
+            async function requestPayment(orderId, chatRoomId) {
                 try {
                     const res = await fetch(`/payment/prepare/${orderId}`, { method: "POST" });
                     const data = await res.json();
@@ -240,7 +240,7 @@
                     IMP.init("imp14868341");
 
                     IMP.request_pay({
-                        pg: "uplus",
+                        channelKey: "channel-key-58eadec0-e9e8-4529-809d-fa40f983b00a",
                         pay_method: "card",
                         merchant_uid: data.merchantUid,
                         name: "작업 의뢰 결제",
@@ -258,7 +258,7 @@
 
                             if (verifyRes.ok) {
                                 alert("결제가 완료되었습니다!");
-                                location.href = `/order/detail/${orderId}`;
+                                location.href = `/order/detail/${chatRoomId}`;   // ← 여기 orderId를 chatRoomId로 변경
                             } else {
                                 alert("결제 검증 실패");
                             }
@@ -277,14 +277,16 @@
             // 첨부파일 중복 등록 / 취소 로직
             let selectedFiles = [];
 
-            document.getElementById('fileInput').addEventListener('change', function (e) {
-                // 새로 고른 파일들을 기존 배열에 누적
-                for (const file of e.target.files) {
-                    selectedFiles.push(file);
-                }
-                renderFileList();
-                e.target.value = ''; // 같은 파일 다시 선택 가능하도록 초기화
-            });
+            const fileInputEl = document.getElementById('fileInput');
+            if (fileInputEl) {
+                fileInputEl.addEventListener('change', function (e) {
+                    for (const file of e.target.files) {
+                        selectedFiles.push(file);
+                    }
+                    renderFileList();
+                    e.target.value = '';
+                });
+            }
 
             function renderFileList() {
                 const listEl = document.getElementById('fileList');
@@ -309,20 +311,22 @@
             }
 
             // 폼 제출 직전, selectedFiles를 실제 input에 채워넣기
-            document.querySelector('form[action*="/order/submit/"]').addEventListener('submit', function (e) {
-                const dataTransfer = new DataTransfer();
-                selectedFiles.forEach(file => dataTransfer.items.add(file));
+            const submitForm = document.querySelector('form[action*="/order/submit/"]');
+            if (submitForm) {
+                submitForm.addEventListener('submit', function (e) {
+                    const dataTransfer = new DataTransfer();
+                    selectedFiles.forEach(file => dataTransfer.items.add(file));
 
-                // 기존 fileInput은 숨겨져 있으니, 실제 전송용 input을 새로 만들어 붙임
-                const hiddenInput = document.createElement('input');
-                hiddenInput.type = 'file';
-                hiddenInput.name = 'files';
-                hiddenInput.multiple = true;
-                hiddenInput.style.display = 'none';
-                hiddenInput.files = dataTransfer.files;
+                    const hiddenInput = document.createElement('input');
+                    hiddenInput.type = 'file';
+                    hiddenInput.name = 'files';
+                    hiddenInput.multiple = true;
+                    hiddenInput.style.display = 'none';
+                    hiddenInput.files = dataTransfer.files;
 
-                this.appendChild(hiddenInput);
-            });
+                    submitForm.appendChild(hiddenInput);
+                });
+            }
         </script>
     </main>
 

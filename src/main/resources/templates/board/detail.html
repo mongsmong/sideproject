@@ -23,6 +23,8 @@
             </div>
         </a>
 
+
+
         <div class="detail-card">
             <div class="detail-header">
                 <span class="category-badge" th:text="${board.category}"></span>
@@ -32,9 +34,30 @@
                 </div>
 
                 <div class="detail-hashtag-list" th:if="${board.hashtag != null and !board.hashtag.isEmpty()}">
-                    <span th:each="tag : ${#strings.arraySplit(board.hashtag, ' ')}" 
-                        　th:if="${!tag.isEmpty()}"
+                    <span th:each="tag : ${#strings.arraySplit(board.hashtag, ' ')}" 　th:if="${!tag.isEmpty()}"
                         　th:text="'#' + ${tag}" class="hashtag-item small"></span>
+                </div>
+            </div>
+
+            <div th:if="${board.files != null and !board.files.isEmpty()}" class="gallery-card">
+                <div class="gallery-viewport" id="galleryViewport">
+                    <div class="gallery-track" id="galleryTrack">
+                        <div th:each="file, iter : ${board.files}" class="gallery-slide">
+                            <img th:if="${file.contentType != null and file.contentType.startsWith('image')}"
+                                th:src="${file.filePath}" class="gallery-media">
+                            <video th:if="${file.contentType != null and file.contentType.startsWith('video')}"
+                                th:src="${file.filePath}" controls class="gallery-media"></video>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="button" class="gallery-nav gallery-prev" onclick="galleryMove(-1)">‹</button>
+                <button type="button" class="gallery-nav gallery-next" onclick="galleryMove(1)">›</button>
+
+                <div class="gallery-dots" id="galleryDots">
+                    <span th:each="file, iter : ${board.files}" class="gallery-dot"
+                        th:classappend="${iter.index == 0} ? ' active' : ''"
+                        th:onclick="|galleryGoTo(${iter.index})|"></span>
                 </div>
             </div>
 
@@ -57,6 +80,31 @@
         </div>
 
     </main>
+
+    <script>
+    let galleryIndex = 0;
+
+    function galleryMove(direction) {
+        const track = document.getElementById('galleryTrack');
+        const slideCount = track.children.length;
+        galleryIndex = (galleryIndex + direction + slideCount) % slideCount;
+        updateGallery();
+    }
+
+    function galleryGoTo(index) {
+        galleryIndex = index;
+        updateGallery();
+    }
+
+    function updateGallery() {
+        const track = document.getElementById('galleryTrack');
+        track.style.transform = `translateX(-${galleryIndex * 100}%)`;
+
+        document.querySelectorAll('.gallery-dot').forEach((dot, i) => {
+            dot.classList.toggle('active', i === galleryIndex);
+        });
+    }
+</script>
 
     <footer th:replace="~{fragments/common :: footer}"></footer>
 </body>

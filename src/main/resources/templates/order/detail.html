@@ -27,7 +27,6 @@
 
     .chat-page-main .send-bar {
         flex-shrink: 0;
-
     }
 
     .site-footer {
@@ -37,7 +36,7 @@
 </style>
 
 <head
-    th:replace="~{fragments/common :: head(${currentUsername == order.buyerUsername ? '작가' : order.buyerNickname} + '님과의 메시지')}">
+    th:replace="~{fragments/common :: head(${currentUsername == room.buyerUsername ? '작가' : room.buyerNickname} + '님과의 메시지')}">
 </head>
 
 <body>
@@ -45,26 +44,12 @@
 
     <main class="container chat-page-main">
         <div style="margin-bottom: 15px; font-weight: bold; font-size: 1.1rem;">
-            <span th:if="${isBuyer}" th:text="${order.boardWriterUsername}"></span>
-            <span th:if="${isWriter}" th:text="${order.buyerNickname}"></span>
+            <span th:if="${isBuyer}" th:text="${room.boardWriterUsername}"></span>
+            <span th:if="${isWriter}" th:text="${room.buyerNickname}"></span>
             님과의 메시지
         </div>
 
         <div class="chat-bg">
-
-            <div th:if="${#lists.isEmpty(messages)}" class="system-notice-box">
-                <p th:if="${order.buyerUsername == currentUsername}" class="notice-text">
-                    작성하신 의뢰 신청서가 작가님께 전달되었습니다.
-                </p>
-                <p th:unless="${order.buyerUsername == currentUsername}" class="notice-text">
-                    <span th:text="'[' + ${order.boardTitle} + ']'"></span>에 새로운 의뢰가 들어왔습니다.
-                </p>
-                <button type="button" class="btn-notice-action"
-                    th:onclick="|location.href='@{/order/info/{id}(id=${order.orderId})}'|">
-                    의뢰서 확인
-                </button>
-            </div>
-
             <div th:unless="${#lists.isEmpty(messages)}" th:each="msg : ${messages}"
                 th:class="${msg.senderUsername == currentUsername ? 'msg-row my' : 'msg-row other'}">
 
@@ -85,7 +70,7 @@
                             <span th:text="${msg.senderNickname}"></span>님에게서 새로운 의뢰가 도착했습니다.
                         </p>
                         <button type="button" class="btn-notice-action"
-                            th:onclick="|location.href='@{/order/info/{id}/request/{mid}(id=${order.orderId},mid=${msg.messageId})}'|">
+                            th:onclick="|location.href='@{/order/info/{id}(id=${msg.orderId})}'|">
                             의뢰서 상세
                         </button>
                     </div>
@@ -94,14 +79,14 @@
                     <div th:if="${msg.messageType != null and msg.messageType.trim().equals('PAY_REQUEST')}"
                         class="bubble bubble-card">
                         <p class="pay-card-title">
-                            <span class="pay-card-title-ellipsis" th:text="${order.orderTitle}"></span>에 대한 결제 요청이
+                            <span class="pay-card-title-ellipsis" th:text="${msg.orderTitle}"></span>에 대한 결제 요청이
                             도착했습니다.
                         </p>
                         <p class="pay-card-amount">
-                            <span th:text="${#numbers.formatInteger(order.totalPrice, 0, 'COMMA')}"></span>원
+                            <span th:text="${#numbers.formatInteger(msg.totalPrice, 0, 'COMMA')}"></span>원
                         </p>
                         <button type="button" class="btn-notice-action"
-                            th:onclick="|location.href='@{/order/info/{id}(id=${order.orderId})}'|">
+                            th:onclick="|location.href='@{/order/info/{id}(id=${msg.orderId})}'|">
                             의뢰서 상세
                         </button>
                     </div>
@@ -111,10 +96,10 @@
                         class="bubble bubble-card">
                         <p class="paid-card-text" th:text="${msg.content}"></p>
                         <p class="pay-card-title">
-                            <span class="pay-card-title-ellipsis" th:text="${order.orderTitle}"></span> 작업이 진행됩니다.
+                            <span class="pay-card-title-ellipsis" th:text="${msg.orderTitle}"></span> 작업이 진행됩니다.
                         </p>
                         <button type="button" class="btn-notice-action"
-                            th:onclick="|location.href='@{/order/info/{id}(id=${order.orderId})}'|">
+                            th:onclick="|location.href='@{/order/info/{id}(id=${msg.orderId})}'|">
                             의뢰서 상세
                         </button>
                     </div>
@@ -123,10 +108,10 @@
                     <div th:if="${msg.messageType != null and msg.messageType.trim().equals('APPROVED')}"
                         class="bubble bubble-card">
                         <p class="pay-card-title">
-                            <span th:text="${order.orderTitle}"></span> 의뢰가 최종 완료되었습니다.
+                            <span th:text="${msg.orderTitle}"></span> 의뢰가 최종 완료되었습니다.
                         </p>
                         <button type="button" class="btn-notice-action"
-                            th:onclick="|location.href='@{/order/info/{id}(id=${order.orderId})}'|">
+                            th:onclick="|location.href='@{/order/info/{id}(id=${msg.orderId})}'|">
                             의뢰서 상세
                         </button>
                     </div>
@@ -141,12 +126,11 @@
                     <div th:if="${msg.messageType != null and msg.messageType.trim().equals('SUBMIT')}"
                         class="bubble bubble-card">
                         <p class="pay-card-title">
-                            <span class="pay-card-title-ellipsis"
-                                th:text="${order.orderTitle != null ? order.orderTitle : order.boardTitle}"></span>에 대한
+                            <span class="pay-card-title-ellipsis" th:text="${msg.orderTitle}"></span>에 대한
                             작업물이 도착했습니다
                         </p>
                         <button type="button" class="btn-notice-action"
-                            th:onclick="|location.href='@{/order/info/{id}(id=${order.orderId})}'|">
+                            th:onclick="|location.href='@{/order/info/{id}(id=${msg.orderId})}'|">
                             상세보기
                         </button>
                     </div>
@@ -155,12 +139,11 @@
                     <div th:if="${msg.messageType != null and msg.messageType.trim().equals('REVISION_REQUEST')}"
                         class="bubble bubble-card revision-card">
                         <p class="pay-card-title">
-                            <span class="pay-card-title-ellipsis"
-                                th:text="${order.orderTitle != null ? order.orderTitle : order.boardTitle}"></span>에 대한
+                            <span class="pay-card-title-ellipsis" th:text="${msg.orderTitle}"></span>에 대한
                             수정요청이 도착했습니다
                         </p>
                         <button type="button" class="btn-notice-action"
-                            th:onclick="|location.href='@{/order/info/{id}(id=${order.orderId})}'|">
+                            th:onclick="|location.href='@{/order/info/{id}(id=${msg.orderId})}'|">
                             의뢰서 상세
                         </button>
                     </div>
@@ -173,7 +156,15 @@
                                             and !msg.messageType.trim().equals('SUBMIT')
                                             and !msg.messageType.trim().equals('APPROVED')
                                             and !msg.messageType.trim().equals('REVISION_REQUEST'))}" class="bubble">
-                        <span th:text="${msg.content}"></span>
+                        <span th:if="${msg.content != null and !msg.content.isEmpty()}" th:text="${msg.content}"></span>
+                        <div th:if="${msg.files != null and !msg.files.isEmpty()}" class="chat-attach-list">
+                            <div th:each="file : ${msg.files}">
+                                <img th:if="${file.contentType != null and file.contentType.startsWith('image')}"
+                                    th:src="${file.filePath}" class="chat-attach-img">
+                                <video th:if="${file.contentType != null and file.contentType.startsWith('video')}"
+                                    th:src="${file.filePath}" controls class="chat-attach-video"></video>
+                            </div>
+                        </div>
                     </div>
 
                     <span th:if="${msg.senderUsername != currentUsername}" class="time"
@@ -182,10 +173,17 @@
             </div>
         </div>
 
-        <form th:action="@{|/order/detail/${order.orderId}/send|}" method="post" class="send-bar">
+        <form th:action="@{|/order/detail/${room.chatRoomId}/send|}" method="post" class="send-bar"
+            enctype="multipart/form-data">
+            <input type="file" id="chatFileInput" multiple accept="image/*,video/*" style="display:none;">
+            <button type="button" class="btn-attach" onclick="document.getElementById('chatFileInput').click()">
+                📎
+            </button>
+
             <div class="input-wrap">
-                <input type="text" name="content" placeholder="메시지를 입력하세요" required autocomplete="off">
+                <input type="text" name="content" placeholder="메시지를 입력하세요" autocomplete="off">
             </div>
+
             <button type="submit" class="btn-send">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                     stroke-linecap="round" stroke-linejoin="round">
@@ -195,14 +193,14 @@
             </button>
         </form>
 
+        <div id="chatFilePreview" class="file-preview-list"></div>
+
         <div style="margin-top: 20px; display: flex; gap: 8px;">
-            <button type="button" class="btn-sub"
-                th:onclick="|location.href='@{/order/info/{id}(id=${order.orderId})}'|">의뢰 확인</button>
+            <!-- TODO: 목적지는 나중에 다시 정할 예정 -->
             <button type="button" class="btn-sub" th:onclick="|location.href='@{/order/list}'|">목록으로</button>
         </div>
 
         <script>
-            // 새 채팅시 스크롤 최하단
             window.addEventListener('DOMContentLoaded', function () {
                 const chatBg = document.querySelector('.chat-bg');
                 if (chatBg) {
@@ -210,11 +208,53 @@
                 }
             });
 
+            let chatSelectedFiles = [];
 
+            document.getElementById('chatFileInput').addEventListener('change', function (e) {
+                for (const file of e.target.files) {
+                    chatSelectedFiles.push(file);
+                }
+                renderChatFileList();
+                e.target.value = '';
+            });
+
+            function renderChatFileList() {
+                const listEl = document.getElementById('chatFilePreview');
+                listEl.innerHTML = '';
+                chatSelectedFiles.forEach((file, index) => {
+                    const item = document.createElement('div');
+                    item.className = 'file-preview-item';
+                    item.innerHTML = `
+            <span class="file-preview-name">${file.name}</span>
+            <button type="button" class="file-preview-remove" data-index="${index}">×</button>
+        `;
+                    listEl.appendChild(item);
+                });
+
+                listEl.querySelectorAll('.file-preview-remove').forEach(btn => {
+                    btn.addEventListener('click', function () {
+                        chatSelectedFiles.splice(Number(this.dataset.index), 1);
+                        renderChatFileList();
+                    });
+                });
+            }
+
+            document.querySelector('form.send-bar').addEventListener('submit', function (e) {
+                const dataTransfer = new DataTransfer();
+                chatSelectedFiles.forEach(file => dataTransfer.items.add(file));
+
+                const hiddenInput = document.createElement('input');
+                hiddenInput.type = 'file';
+                hiddenInput.name = 'attachments';
+                hiddenInput.multiple = true;
+                hiddenInput.style.display = 'none';
+                hiddenInput.files = dataTransfer.files;
+
+                this.appendChild(hiddenInput);
+
+                chatSelectedFiles = [];
+            });
         </script>
-
-
-
     </main>
 
     <footer th:replace="~{fragments/common :: footer}"></footer>
