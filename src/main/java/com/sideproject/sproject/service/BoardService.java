@@ -5,9 +5,10 @@ import com.sideproject.sproject.entity.Account;
 import com.sideproject.sproject.entity.Board;
 import com.sideproject.sproject.repository.BoardRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest; 
 import org.springframework.data.domain.Pageable;
-
+import java.util.Arrays;
+import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
@@ -24,18 +25,18 @@ public class BoardService {
     // 게시글 등록
     @Transactional
     public int saveBoard(BoardDTO boardDTO, Account writer) { // Account를 파라미터로 받음
+        String hashtag = boardDTO.getHashtag() != null ? boardDTO.getHashtag().trim() : null;
         String type = "OFFER";
-        if("구해요".equals(boardDTO.getCategory())){
+
+        if ("구해요".equals(boardDTO.getCategory())) {
             type = "REQUEST";
         }
-
-
 
         Board board = Board.builder()
                 .title(boardDTO.getTitle())
                 .content(boardDTO.getContent())
                 .category(boardDTO.getCategory())
-                .hashtag(boardDTO.getHashtag()) 
+                .hashtag(hashtag)
                 .postType(type)
                 .basePrice(boardDTO.getBasePrice())
                 .account(writer) // 여기서 Account 객체를 넘겨주면 JPA가 writer_id 컬럼에 알아서 ID를 넣음
@@ -45,36 +46,63 @@ public class BoardService {
         // board에 attachs 엔티티가 적용되어 있으므로
         // board 테이블 insert와 attach 테이블의 insert가
         // 한 번에 실행됨(JPA 연결 특성으로 인해)
-        
         boardRepository.save(board);
         return 1;
     }
 
+    // 게시글 수정
+    @Transactional
+    public void updateBoard(Long boardId, BoardDTO dto, String username) {
+        Board board = boardRepository.findById(boardId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 게시글입니다."));
+
+        if (!board.getAccount().getUsername().equals(username)) {
+            throw new IllegalStateException("수정 권한이 없습니다.");
+        }
+
+        String hashtag = dto.getHashtag() != null ? dto.getHashtag().trim() : null;
+        String type = "구해요".equals(dto.getCategory()) ? "REQUEST" : "OFFER";
+
+        board.setTitle(dto.getTitle());
+        board.setContent(dto.getContent());
+        board.setCategory(dto.getCategory());
+        board.setHashtag(hashtag);
+        board.setPostType(type);
+        board.setBasePrice(dto.getBasePrice());
+        // postStatus는 마감 토글 기능(togglePostStatus)이 따로 있으니 여기선 건드리지 않음
+
+        boardRepository.save(board);
+    }
+
     // 전체 게시글 조회(페이징 처리)
     @Transactional(readOnly = true)
-public Page<BoardDTO> getBoards(String category, String keyword, Pageable pageable) {
-    Page<Board> boards;
+    public Page<BoardDTO> getBoards(String category, String keyword, String hashtag, Pageable pageable) {
+        boolean hasCategory = category != null && !category.isEmpty();
+        boolean hasKeyword = keyword != null && !keyword.isEmpty();
+        boolean hasHashtag = hashtag != null && !hashtag.isEmpty();
 
-    // 1. 카테고리와 검색어가 둘 다 있을 때
-    if (category != null && !category.isEmpty() && keyword != null && !keyword.isEmpty()) {
-        boards = boardRepository.searchByCategoryAndKeyword(category, keyword, pageable);
-    }
-    // 2. 카테고리만 있을 때
-    else if (category != null && !category.isEmpty()) {
-        boards = boardRepository.findByCategory(category, pageable);
-    }
-    // 3. 검색어만 있을 때
-    else if (keyword != null && !keyword.isEmpty()) {
-        boards = boardRepository.searchByKeyword(keyword, pageable);
-    }
-    // 4. 둘 다 없을 때 (전체 조회)
-    else {
-        boards = boardRepository.findAll(pageable);
-    }
+        Page<Board> boards;
 
-    // 작성해두신 toDTO 메서드를 활용하여 Page를 변환합니다.
-    return boards.map(this::toDTO);
-}
+        if (hasCategory && hasKeyword && hasHashtag) {
+            boards = boardRepository.searchByCategoryAndKeywordAndHashtag(category, keyword, hashtag, pageable);
+        } else if (hasCategory && hasHashtag) {
+            boards = boardRepository.findByCategoryAndHashtagContaining(category, hashtag, pageable);
+        } else if (hasKeyword && hasHashtag) {
+            boards = boardRepository.searchByKeywordAndHashtag(keyword, hashtag, pageable);
+        } else if (hasHashtag) {
+            boards = boardRepository.findByHashtagContaining(hashtag, pageable);
+        } else if (hasCategory && hasKeyword) {
+            boards = boardRepository.searchByCategoryAndKeyword(category, keyword, pageable);
+        } else if (hasCategory) {
+            boards = boardRepository.findByCategory(category, pageable);
+        } else if (hasKeyword) {
+            boards = boardRepository.searchByKeyword(keyword, pageable);
+        } else {
+            boards = boardRepository.findAll(pageable);
+        }
+
+        return boards.map(this::toDTO);
+    }
 
     // 게시글 상세 조회
     public BoardDTO getBoardById(Long boardId) {
@@ -91,22 +119,38 @@ public Page<BoardDTO> getBoards(String category, String keyword, Pageable pageab
         return toDTO(board);
     }
 
-    // 게시글 상태 토글 (ON <-> OFF)
-    public void togglePostStatus(Long boardId) {
-        Board post = boardRepository.findById(boardId)
-                .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다."));
 
-        String newStatus = post.getPostStatus().equals("ON") ? "OFF" : "ON";
-        post.setPostStatus(newStatus);
+
+    // 게시글 상태 토글 (ON <-> OFF)
+    @Transactional
+    public void togglePostStatus(Long boardId, String username) {
+        Board board = boardRepository.findById(boardId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 게시글입니다."));
+
+        if (!board.getAccount().getUsername().equals(username)) {
+            throw new IllegalStateException("권한이 없습니다.");
+        }
+
+        board.setPostStatus("ON".equals(board.getPostStatus()) ? "OFF" : "ON");
+        boardRepository.save(board);
     }
 
 
+     // 인기 해시태그 조회
+    public List<String> getPopularHashtags() {
+        List<String> allHashtagStrings = boardRepository.findAllHashtagStrings();
 
+        Map<String, Long> tagCounts = allHashtagStrings.stream()
+                .flatMap(s -> Arrays.stream(s.trim().split("\\s+")))
+                .filter(tag -> !tag.isEmpty())
+                .collect(Collectors.groupingBy(tag -> tag, Collectors.counting()));
 
-public List<String> getPopularHashtags() {
-
-    return boardRepository.findPopularHashtags(PageRequest.of(0, 5));
-}
+        return tagCounts.entrySet().stream()
+                .sorted((a, b) -> b.getValue().compareTo(a.getValue()))
+                .limit(5)
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toList());
+    }
 
     // Board -> BoardDTO 변경 메소드
     private BoardDTO toDTO(Board board) {
@@ -134,7 +178,8 @@ public List<String> getPopularHashtags() {
                 .regDate(board.getRegDate())
                 .writerId(board.getAccount().getAccountId())
                 .writerNickname(board.getAccount().getNickname())
-                .writerUsername(board.getAccount().getUsername()) 
+                .writerUsername(board.getAccount().getUsername())
+                .writerProfileImageUrl(board.getAccount().getProfileImageUrl())
                 .build();
     }
 }

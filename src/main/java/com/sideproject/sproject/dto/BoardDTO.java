@@ -25,9 +25,11 @@ public class BoardDTO {
     private LocalDateTime regDate; // 리스트/상세 페이지에 필요
     private List<String> questionTitles;
     private String postType;
-    
+ 
+
     // 작성자 관련 정보 (화면 표시 및 로직용)
     private Long writerId;         // DB 식별자 (FK)
     private String writerNickname; // 화면 표시용 (닉네임)
     private String writerUsername; // 본인 확인 및 로직 처리용 (로그인 ID)
+    private String writerProfileImageUrl;
 }

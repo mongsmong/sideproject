@@ -152,19 +152,18 @@ a {
     margin: 0;
 }
 
+.logout-form-wrap {
+    margin: 0;
+    width: 100%;
+}
+
 .user-name {
     font-weight: 600;
     color: #333;
 }
 
 .logout-btn {
-    background: none !important;
-    border: none !important;
-    padding: 0 !important;
-    color: #666 !important;
-    font-size: 0.95rem !important;
-    cursor: pointer !important;
-    font-family: inherit !important;
+    font-family: inherit;
 }
 
 .logout-btn:hover {
@@ -367,6 +366,155 @@ input[type="number"]::-webkit-inner-spin-button {
 }
 
 
+/* account/profile : 프로필 */
+
+.profile-header-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    margin: 20px auto;
+    max-width: 600px;
+}
+
+.profile-header-img {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.profile-header-placeholder {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: #7c3aed;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    font-weight: 700;
+}
+
+.profile-header-info {
+    flex: 1;
+}
+
+.profile-header-info h3 {
+    font-size: 1.2rem;
+    margin-bottom: 4px;
+}
+
+.profile-stats {
+    display: flex;
+    gap: 14px;
+    font-size: 0.85rem;
+    color: #64748b;
+}
+
+.profile-board-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #f1f5f9;
+    position: relative;
+}
+
+.profile-board-title {
+    color: #1e293b;
+    font-weight: 600;
+}
+
+.profile-board-status {
+    font-size: 0.8rem;
+    color: #16a34a;
+    margin-left: auto;
+    margin-right: 12px;
+}
+
+.profile-board-status.off {
+    color: #94a3b8;
+}
+
+.profile-board-menu {
+    position: relative;
+}
+
+.profile-board-dots {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 4px 8px;
+}
+
+.profile-board-dropdown {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 100%;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    min-width: 100px;
+    z-index: 10;
+}
+
+.profile-board-dropdown.show {
+    display: block;
+}
+
+.profile-board-dropdown a,
+.profile-board-dropdown button {
+    display: block;
+    width: 100%;
+    padding: 8px 12px;
+    text-align: left;
+    background: none;
+    border: none;
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+
+.profile-board-dropdown a:hover,
+.profile-board-dropdown button:hover {
+    background: #f8fafc;
+}
+
+
+/*account/profile 슬롯*/
+.slot-box-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 10px 0;
+}
+
+.slot-box {
+    width: 22px;
+    height: 22px;
+    border: 2px solid #cbd5e1;
+    border-radius: 4px;
+    background: #ffffff;
+}
+
+.slot-box.filled {
+    background: #7c3aed;
+    border-color: #7c3aed;
+}
+
+.slot-info-text {
+    font-size: 0.85rem;
+    color: #64748b;
+    margin: 8px 0 14px;
+}
+
 /* ============================================================
    2. BOARD — 게시글 목록 / 상세
    ============================================================ */
@@ -532,6 +680,7 @@ input[type="number"]::-webkit-inner-spin-button {
     height: 180px;
     background-color: #f1f5f9;
     overflow: hidden;
+    position: relative;
 }
 
 .card-img img {
@@ -579,9 +728,33 @@ input[type="number"]::-webkit-inner-spin-button {
 }
 
 .hashtag {
-    font-size: 0.8rem;
-    color: #94a3b8;
-    margin-bottom: 16px;
+    display: flex;
+    flex-wrap: wrap;
+    /* justify-content: flex-end; */
+    gap: 4px;
+    margin-bottom: 14px;
+}
+
+.hashtag-item.small {
+    padding: 3px 8px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+}
+
+.hashtag-item.active {
+    background-color: #7c3aed;
+    color: #ffffff;
+    border-color: #7c3aed;
+}
+
+.hashtag-clear {
+    background-color: #fef2f2;
+    color: #dc2626;
+    border-color: #fecaca;
+}
+
+.hashtag-clear:hover {
+    background-color: #fee2e2;
 }
 
 .writer {
@@ -681,6 +854,83 @@ input[type="number"]::-webkit-inner-spin-button {
     border-bottom: 1px solid #e2e8f0;
     padding-bottom: 20px;
     margin-bottom: 28px;
+}
+
+.writer-card-link {
+    display: block;
+    text-decoration: none;
+    max-width: 720px;
+    margin: 0 auto 16px;
+}
+
+.writer-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 16px 20px;
+    transition: box-shadow 0.15s ease;
+}
+
+.writer-card-link:hover .writer-card {
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+}
+
+.writer-card-img {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.writer-card-placeholder {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #7c3aed;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.writer-card-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.writer-card-nickname {
+    font-weight: 700;
+    font-size: 1rem;
+    color: #1e293b;
+}
+
+.writer-card-stat {
+    font-size: 0.85rem;
+    color: #64748b;
+}
+
+.writer-card-stat strong {
+    color: #7c3aed;
+}
+
+.detail-hashtag-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+}
+
+.hashtag-item.small {
+    padding: 3px 8px;
+    font-size: 0.75rem;
 }
 
 .category-badge {
@@ -1259,12 +1509,6 @@ input[type="number"]::-webkit-inner-spin-button {
     margin-bottom: 6px;
 }
 
-.bubble-box {
-    display: flex;
-    align-items: flex-end;
-    gap: 6px;
-    max-width: 75%;
-}
 
 .bubble {
     padding: 10px 14px;
@@ -1272,6 +1516,14 @@ input[type="number"]::-webkit-inner-spin-button {
     font-size: 0.95rem;
     line-height: 1.5;
     word-break: break-all;
+}
+
+
+.bubble-box {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    max-width: 75%;
 }
 
 .msg-row.other .bubble {
@@ -1283,6 +1535,28 @@ input[type="number"]::-webkit-inner-spin-button {
 .msg-row.my .bubble {
     background-color: #ede6f6;
     color: #111827;
+}
+
+.bubble-card {
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 16px;
+    max-width: 280px;
+    word-break: normal;       
+    overflow-wrap: break-word;
+}
+
+.bubble-card.paid-card {
+    border-color: #86efac;
+}
+
+.bubble-card.cancel-card {
+    border-color: #fca5a5;
+}
+
+.bubble-card.revision-card {
+    border-color: #fbbf24;
 }
 
 .time {

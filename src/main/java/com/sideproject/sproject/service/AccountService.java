@@ -75,37 +75,48 @@ public class AccountService implements UserDetailsService {
                 .build();
     }
 
-    // 프로필 정보 가져오기 
+    // 프로필 정보 가져오기
     public AccountDTO getMyInfo(String username) {
         Account account = accountRepository.findByUsername(username)
-            .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
 
-            return AccountDTO.builder()
-                            .username(account.getUsername())
-                            .nickname(account.getNickname())
-                            .email(account.getEmail())
-                            .profileImageUrl(account.getProfileImageUrl())
-                            .build();
+        return AccountDTO.builder()
+                .username(account.getUsername())
+                .nickname(account.getNickname())
+                .email(account.getEmail())
+                .profileImageUrl(account.getProfileImageUrl())
+                .build();
     }
 
     // 프로필 업데이트
     @Transactional
-    public void updateMyinfo(String username, String nickname, String email, MultipartFile profileImage) throws IOException{
+    public void updateMyinfo(String username, String nickname, String email, MultipartFile profileImage)
+            throws IOException {
         Account account = accountRepository.findByUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
 
         account.setNickname(nickname);
         account.setEmail(email);
 
-        if(profileImage != null && !profileImage.isEmpty()) {
+        if (profileImage != null && !profileImage.isEmpty()) {
             Map uploadResult = cloudinary.uploader().upload(
-                profileImage.getBytes(),
-                ObjectUtils.asMap("resource_type", "image")
-            );
+                    profileImage.getBytes(),
+                    ObjectUtils.asMap("resource_type", "image"));
 
             String imageUrl = (String) uploadResult.get("secure_url");
             account.setProfileImageUrl(imageUrl);
         }
+        accountRepository.save(account);
+    }
+
+    // 슬롯 세팅
+    @Transactional
+    public void updateSlotSettings(String username, Integer maxSlots, boolean allowOverbooking) {
+        Account account = accountRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
+
+        account.setMaxSlots(maxSlots);
+        account.setAllowOverbooking(allowOverbooking);
         accountRepository.save(account);
     }
 

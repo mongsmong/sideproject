@@ -14,8 +14,8 @@ import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
-public class Interceptor implements HandlerInterceptor {
-
+public class Interceptor implements HandlerInterceptor { // cpmmon에 필요한 변수 전역
+ 
     private final AccountRepository accountRepository;
 
     @Override
@@ -28,6 +28,7 @@ public class Interceptor implements HandlerInterceptor {
             accountRepository.findByUsername(principal.getName()).ifPresent(account -> {
                 modelAndView.addObject("profileImageUrl", account.getProfileImageUrl());
                 modelAndView.addObject("nickname", account.getNickname());
+                modelAndView.addObject("myUsername", account.getUsername());
             });
         }
     }

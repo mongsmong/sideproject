@@ -1,5 +1,40 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
+<style>
+    html,
+    body {
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+    }
+
+    body {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .chat-page-main {
+        max-width: none;
+        width: 70%;
+        margin: 0 auto;
+    }
+
+    .chat-page-main .chat-bg {
+        flex: 1;
+        min-height: 0;
+    }
+
+    .chat-page-main .send-bar {
+        flex-shrink: 0;
+
+    }
+
+    .site-footer {
+        flex-shrink: 0;
+        width: 100%;
+    }
+</style>
 
 <head
     th:replace="~{fragments/common :: head(${currentUsername == order.buyerUsername ? '작가' : order.buyerNickname} + '님과의 메시지')}">
@@ -8,18 +43,15 @@
 <body>
     <header th:replace="~{fragments/common :: header}"></header>
 
-    <main class="container">
+    <main class="container chat-page-main">
         <div style="margin-bottom: 15px; font-weight: bold; font-size: 1.1rem;">
             <span th:if="${isBuyer}" th:text="${order.boardWriterUsername}"></span>
             <span th:if="${isWriter}" th:text="${order.buyerNickname}"></span>
             님과의 메시지
         </div>
 
-
-
         <div class="chat-bg">
 
-            <!-- 의뢰 신청 -->
             <div th:if="${#lists.isEmpty(messages)}" class="system-notice-box">
                 <p th:if="${order.buyerUsername == currentUsername}" class="notice-text">
                     작성하신 의뢰 신청서가 작가님께 전달되었습니다.
@@ -39,13 +71,28 @@
                 <div th:if="${msg.senderUsername != currentUsername}" class="sender-name">
                     <img th:if="${msg.senderProfileImageUrl != null}" th:src="${msg.senderProfileImageUrl}"
                         class="chat-profile-img">
-                    <span class="sender-name" th:text="${msg.senderNickname}"></span>
+                    <span th:text="${msg.senderNickname}"></span>
                 </div>
 
-                <!-- 결제 요청 / 신규 신청: 같은 카드로 표시 -->
-                <div th:if="${msg.messageType != null and (msg.messageType.trim().equals('PAY_REQUEST') or msg.messageType.trim().equals('NEW_REQUEST'))}"
-                    class="pay-card-wrap">
-                    <div class="system-notice-box">
+                <div class="bubble-box">
+                    <span th:if="${msg.senderUsername == currentUsername}" class="time"
+                        th:text="${#temporals.format(msg.regDate, 'HH:mm')}"></span>
+
+                    <!-- 신규 신청 -->
+                    <div th:if="${msg.messageType != null and msg.messageType.trim().equals('NEW_REQUEST')}"
+                        class="bubble bubble-card">
+                        <p class="pay-card-title">
+                            <span th:text="${msg.senderNickname}"></span>님에게서 새로운 의뢰가 도착했습니다.
+                        </p>
+                        <button type="button" class="btn-notice-action"
+                            th:onclick="|location.href='@{/order/info/{id}/request/{mid}(id=${order.orderId},mid=${msg.messageId})}'|">
+                            의뢰서 상세
+                        </button>
+                    </div>
+
+                    <!-- 결제 요청 -->
+                    <div th:if="${msg.messageType != null and msg.messageType.trim().equals('PAY_REQUEST')}"
+                        class="bubble bubble-card">
                         <p class="pay-card-title">
                             <span class="pay-card-title-ellipsis" th:text="${order.orderTitle}"></span>에 대한 결제 요청이
                             도착했습니다.
@@ -54,22 +101,14 @@
                             <span th:text="${#numbers.formatInteger(order.totalPrice, 0, 'COMMA')}"></span>원
                         </p>
                         <button type="button" class="btn-notice-action"
-                            th:if="${msg.messageType.trim().equals('NEW_REQUEST')}"
-                            th:onclick="|location.href='@{/order/info/{id}/request/{mid}(id=${order.orderId},mid=${msg.messageId})}'|">
-                            의뢰서 상세
-                        </button>
-                        <button type="button" class="btn-notice-action"
-                            th:if="${msg.messageType.trim().equals('PAY_REQUEST')}"
                             th:onclick="|location.href='@{/order/info/{id}(id=${order.orderId})}'|">
                             의뢰서 상세
                         </button>
-                        <p class="pay-card-time" th:text="${#temporals.format(msg.regDate, 'HH:mm')}"></p>
                     </div>
-                </div>
 
-                <!-- 결제 완료 메시지: 카드로만 표시 -->
-                <div th:if="${msg.messageType != null and msg.messageType.trim().equals('PAID')}" class="pay-card-wrap">
-                    <div class="system-notice-box paid-card">
+                    <!-- 결제 완료 -->
+                    <div th:if="${msg.messageType != null and msg.messageType.trim().equals('PAID')}"
+                        class="bubble bubble-card">
                         <p class="paid-card-text" th:text="${msg.content}"></p>
                         <p class="pay-card-title">
                             <span class="pay-card-title-ellipsis" th:text="${order.orderTitle}"></span> 작업이 진행됩니다.
@@ -78,15 +117,11 @@
                             th:onclick="|location.href='@{/order/info/{id}(id=${order.orderId})}'|">
                             의뢰서 상세
                         </button>
-                        <p class="pay-card-time" th:text="${#temporals.format(msg.regDate, 'HH:mm')}"></p>
                     </div>
-                </div>
 
-                <!-- 작업 완료(최종 승인) 메시지: 카드로만 표시 -->
-                <div th:if="${msg.messageType != null and msg.messageType.trim().equals('APPROVED')}"
-                    class="pay-card-wrap">
-                    <div class="system-notice-box paid-card">
-                        <p class="paid-card-text" th:text="${msg.content}"></p>
+                    <!-- 작업 완료(최종 승인) -->
+                    <div th:if="${msg.messageType != null and msg.messageType.trim().equals('APPROVED')}"
+                        class="bubble bubble-card">
                         <p class="pay-card-title">
                             <span th:text="${order.orderTitle}"></span> 의뢰가 최종 완료되었습니다.
                         </p>
@@ -94,23 +129,17 @@
                             th:onclick="|location.href='@{/order/info/{id}(id=${order.orderId})}'|">
                             의뢰서 상세
                         </button>
-                        <p class="pay-card-time" th:text="${#temporals.format(msg.regDate, 'HH:mm')}"></p>
                     </div>
-                </div>
 
-                <!-- 취소 메시지: 카드로만 표시 -->
-                <div th:if="${msg.messageType != null and msg.messageType.trim().equals('CANCELED')}"
-                    class="pay-card-wrap">
-                    <div class="system-notice-box cancel-card">
+                    <!-- 취소 -->
+                    <div th:if="${msg.messageType != null and msg.messageType.trim().equals('CANCELED')}"
+                        class="bubble bubble-card cancel-card">
                         <p class="notice-text cancel-card-text" th:text="${msg.content}"></p>
-                        <p class="cancel-card-time" th:text="${#temporals.format(msg.regDate, 'HH:mm')}"></p>
                     </div>
-                </div>
 
-                <!-- 작업물 제출 메시지: 카드로 표시 -->
-                <div th:if="${msg.messageType != null and msg.messageType.trim().equals('SUBMIT')}"
-                    class="pay-card-wrap">
-                    <div class="system-notice-box">
+                    <!-- 작업물 제출 -->
+                    <div th:if="${msg.messageType != null and msg.messageType.trim().equals('SUBMIT')}"
+                        class="bubble bubble-card">
                         <p class="pay-card-title">
                             <span class="pay-card-title-ellipsis"
                                 th:text="${order.orderTitle != null ? order.orderTitle : order.boardTitle}"></span>에 대한
@@ -120,14 +149,11 @@
                             th:onclick="|location.href='@{/order/info/{id}(id=${order.orderId})}'|">
                             상세보기
                         </button>
-                        <p class="pay-card-time" th:text="${#temporals.format(msg.regDate, 'HH:mm')}"></p>
                     </div>
-                </div>
 
-                <!-- 수정 요청 메시지: 카드로만 표시 -->
-                <div th:if="${msg.messageType != null and msg.messageType.trim().equals('REVISION_REQUEST')}"
-                    class="pay-card-wrap">
-                    <div class="system-notice-box revision-card">
+                    <!-- 수정 요청 -->
+                    <div th:if="${msg.messageType != null and msg.messageType.trim().equals('REVISION_REQUEST')}"
+                        class="bubble bubble-card revision-card">
                         <p class="pay-card-title">
                             <span class="pay-card-title-ellipsis"
                                 th:text="${order.orderTitle != null ? order.orderTitle : order.boardTitle}"></span>에 대한
@@ -137,22 +163,16 @@
                             th:onclick="|location.href='@{/order/info/{id}(id=${order.orderId})}'|">
                             의뢰서 상세
                         </button>
-                        <p class="pay-card-time" th:text="${#temporals.format(msg.regDate, 'HH:mm')}"></p>
                     </div>
-                </div>
 
-                <!-- 일반 메시지: 기존 버블 -->
-                <div th:if="${msg.messageType == null or (!msg.messageType.trim().equals('PAY_REQUEST') 
-                                        and !msg.messageType.trim().equals('CANCELED') 
-                                        and !msg.messageType.trim().equals('PAID')
-                                        and !msg.messageType.trim().equals('NEW_REQUEST')
-                                        and !msg.messageType.trim().equals('SUBMIT')
-                                        and !msg.messageType.trim().equals('APPROVED')
-                                        and !msg.messageType.trim().equals('REVISION_REQUEST'))}" class="bubble-box">
-                    <span th:if="${msg.senderUsername == currentUsername}" class="time"
-                        th:text="${#temporals.format(msg.regDate, 'HH:mm')}"></span>
-
-                    <div class="bubble">
+                    <!-- 일반 메시지 -->
+                    <div th:if="${msg.messageType == null or (!msg.messageType.trim().equals('PAY_REQUEST') 
+                                            and !msg.messageType.trim().equals('CANCELED') 
+                                            and !msg.messageType.trim().equals('PAID')
+                                            and !msg.messageType.trim().equals('NEW_REQUEST')
+                                            and !msg.messageType.trim().equals('SUBMIT')
+                                            and !msg.messageType.trim().equals('APPROVED')
+                                            and !msg.messageType.trim().equals('REVISION_REQUEST'))}" class="bubble">
                         <span th:text="${msg.content}"></span>
                     </div>
 
@@ -161,7 +181,6 @@
                 </div>
             </div>
         </div>
-
 
         <form th:action="@{|/order/detail/${order.orderId}/send|}" method="post" class="send-bar">
             <div class="input-wrap">
@@ -181,6 +200,21 @@
                 th:onclick="|location.href='@{/order/info/{id}(id=${order.orderId})}'|">의뢰 확인</button>
             <button type="button" class="btn-sub" th:onclick="|location.href='@{/order/list}'|">목록으로</button>
         </div>
+
+        <script>
+            // 새 채팅시 스크롤 최하단
+            window.addEventListener('DOMContentLoaded', function () {
+                const chatBg = document.querySelector('.chat-bg');
+                if (chatBg) {
+                    chatBg.scrollTop = chatBg.scrollHeight;
+                }
+            });
+
+
+        </script>
+
+
+
     </main>
 
     <footer th:replace="~{fragments/common :: footer}"></footer>

@@ -26,7 +26,8 @@
                         <span class="nickname"
                             th:text="${order.buyerUsername == currentUsername ? order.boardWriterUsername : order.buyerNickname}"></span>
                     </div>
-                    <span class="time" th:text="${#temporals.format(order.regDate, 'MM/dd HH:mm')}"></span>
+                    <span class="time"
+                        th:text="${#temporals.format(order.lastMessageDate != null ? order.lastMessageDate : order.regDate, 'MM/dd HH:mm')}"></span>
                 </div>
 
                 <div class="room-bottom">

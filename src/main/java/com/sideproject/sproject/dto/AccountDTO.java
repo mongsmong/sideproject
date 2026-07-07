@@ -18,5 +18,7 @@ public class AccountDTO {
     private String profileImageUrl;
     private String email;
     private AccountRole role;
+    private Integer maxSlots;
+    private boolean allowOverbooking;
 
 }

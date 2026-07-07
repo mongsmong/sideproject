@@ -8,11 +8,8 @@
 
     <!-- 검색 및 카테고리 필터 영역 -->
     <div class="search-wrap">
-        <!-- form 태그로 감싸고, GET 방식으로 컨트롤러에 요청 -->
         <form th:action="@{/board/list}" method="get" class="search-form">
 
-            <!-- 1. 카테고리 선택 -->
-            <!-- th:value="${param.category}" ㄴ 검색 후에도 선택한 값이 유지 -->
             <select name="category" class="category-select">
                 <option value="" th:selected="${param.category == null or param.category == ''}">전체 카테고리</option>
                 <option value="디자인" th:selected="${param.category != null and param.category.toString() == '디자인'}">디자인
@@ -23,29 +20,41 @@
                 </option>
                 <option value="구해요" th:selected="${param.category != null and param.category.toString() == '구해요'}">구해요
                 </option>
-                <!-- 카테고리 추가 -->
             </select>
 
-            <!-- 2. 검색어 입력 -->
             <div class="input-box">
-                <!-- 검색 후에도 검색어가 지워지지 않고 남아있게 th:value 설정 -->
                 <input type="text" name="keyword" placeholder="검색어를 입력하세요." th:value="${param.keyword}"
                     class="search-input">
 
+                <!-- 현재 선택된 해시태그를 검색 시에도 유지 -->
+                <input type="hidden" name="hashtag" th:value="${param.hashtag}">
+
                 <button type="submit" class="search-btn">
-                    <i class="fas fa-search"></i> <!-- 돋보기 아이콘 -->
+                    <i class="fas fa-search"></i>
                 </button>
             </div>
         </form>
     </div>
+
     <div class="popular-hashtags-wrap">
         <div class="hashtag-title"></div>
         <div class="hashtag-list">
-            <a th:each="tag : ${popularTags}" th:href="@{/board/list(keyword=${tag})}" th:text="'#' + ${tag}"
+            <a th:each="tag : ${popularTags}"
+                th:href="@{/board/list(category=${param.category}, keyword=${param.keyword}, hashtag=${tag})}"
+                th:text="'#' + ${tag}"
+                th:classappend="${selectedHashtag != null and selectedHashtag == tag} ? ' active' : ''"
                 class="hashtag-item">
+            </a>
+
+            <!-- 선택 해제 버튼: 해시태그가 선택된 상태일 때만 노출 -->
+            <a th:if="${selectedHashtag != null and !selectedHashtag.isEmpty()}"
+                th:href="@{/board/list(category=${param.category}, keyword=${param.keyword})}"
+                class="hashtag-item hashtag-clear">
             </a>
         </div>
     </div>
+
+
 
 
     <main class="container">
@@ -60,6 +69,7 @@
 
                 <div class="card-img">
                     <img src="https://placehold.co/300x200?text=No+Image" alt="썸네일">
+                    <span th:if="${board.postStatus == 'OFF'}" class="closed-badge">마감</span>
                 </div>
 
                 <div class="card-info">
@@ -70,7 +80,12 @@
                         <span class="category" th:text="${board.category}"></span>
                     </div>
 
-                    <div class="hashtag">#해시태그</div>
+                    <div class="hashtag">
+                        <span th:each="tag : ${#strings.arraySplit(board.hashtag, ' ')}" 
+                            　th:if="${!tag.isEmpty()}"
+                           　 th:text="'#' + ${tag}" 
+                           　class="hashtag-item small"></span>
+                    </div>
 
                     <div class="writer" th:text="${board.writerNickname}"></div>
                 </div>

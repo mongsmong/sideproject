@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.sideproject.sproject.common.AccountRole;
 import com.sideproject.sproject.dto.BoardDTO;
@@ -49,12 +50,13 @@ public class OrderController {
 
     // 주문 만들기 (중복 방지 & 소통창 바로 가기)
     @PostMapping("/create/{boardId}")
-    public String createOrder(@PathVariable Long boardId, OrderDTO dto, Principal principal) {
+    public String createOrder(@PathVariable Long boardId, OrderDTO dto, Principal principal,
+                                RedirectAttributes redirectAttributes) {
         // 로그인 사용자 정보 체크
         if (principal == null) {
             return "redirect:/auth/login";
         }
-        System.out.println("프론트에서 넘어온 DTO: " + dto.toString());
+//        System.out.println("프론트에서 넘어온 DTO: " + dto.toString());
 
         Board board = boardRepository.findById(dto.getBoardId())
                 .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다."));
@@ -68,10 +70,17 @@ public class OrderController {
             throw new IllegalStateException("신청 권한이 없습니다.");
         }
 
+        
         // 4. 저장 및 중복 체크
+       
+    try {
         Long orderId = orderService.saveOrder(dto, board, buyer);
-
         return "redirect:/order/detail/" + orderId;
+    } catch (IllegalStateException e) {
+        redirectAttributes.addFlashAttribute("errorMsg", e.getMessage());
+        return "redirect:/board/detail/" + boardId;
+    }
+
     }
 
     // 주문 캔슬

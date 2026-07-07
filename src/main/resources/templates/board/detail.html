@@ -7,12 +7,34 @@
     <header th:replace="~{fragments/common :: header}"></header>
 
     <main class="container">
+
+        <!-- 프로필 카드 -->
+        <a th:href="@{/account/profile/{username}(username=${board.writerUsername})}" class="writer-card-link">
+            <div class="writer-card">
+                <img th:if="${board.writerProfileImageUrl != null}" th:src="${board.writerProfileImageUrl}"
+                    class="writer-card-img">
+                <div th:unless="${board.writerProfileImageUrl != null}" class="writer-card-placeholder"
+                    th:text="${#strings.substring(board.writerNickname, 0, 1)}"></div>
+
+                <div class="writer-card-info">
+                    <div class="writer-card-nickname" th:text="${board.writerNickname}"></div>
+                    <div class="writer-card-stat">완료된 작업: <strong th:text="${completedCount}"></strong>건</div>
+                </div>
+            </div>
+        </a>
+
         <div class="detail-card">
             <div class="detail-header">
                 <span class="category-badge" th:text="${board.category}"></span>
                 <h2 th:text="${board.title}"></h2>
                 <div class="price-box">
                     <span th:text="${board.basePrice}"></span>원
+                </div>
+
+                <div class="detail-hashtag-list" th:if="${board.hashtag != null and !board.hashtag.isEmpty()}">
+                    <span th:each="tag : ${#strings.arraySplit(board.hashtag, ' ')}" 
+                        　th:if="${!tag.isEmpty()}"
+                        　th:text="'#' + ${tag}" class="hashtag-item small"></span>
                 </div>
             </div>
 
@@ -29,9 +51,11 @@
                 <a th:href="@{/board/list}" class="btn-gray">목록으로</a>
             </div>
         </div>
+
         <div th:if="${hasCompletedOrder}">
             <a th:href="@{/review/register/{boardId}(boardId=${board.boardId})}" class="btn-review">리뷰 작성하기</a>
         </div>
+
     </main>
 
     <footer th:replace="~{fragments/common :: footer}"></footer>

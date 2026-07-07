@@ -40,6 +40,7 @@ public class OrderDTO {
     private Integer totalPrice;   // 최종 금액
     private String orderStatus;   // 주문 상태
     private LocalDateTime regDate; // 주문 일시 
+    private LocalDateTime lastMessageDate; // 마지막으로 받은 채팅
     
 
 }

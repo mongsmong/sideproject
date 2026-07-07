@@ -11,26 +11,46 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface BoardRepository extends JpaRepository<Board, Long> {
-    List<Board> findByAccount_Username(String username);
+       List<Board> findByAccount_Username(String username);
 
+       // 1. 카테고리 + 검색어
+       @Query("SELECT b FROM Board b WHERE b.category = :category AND " +
+                     "(b.title LIKE %:keyword% OR b.content LIKE %:keyword% OR b.hashtag LIKE %:keyword%)")
+       Page<Board> searchByCategoryAndKeyword(@Param("category") String category,
+                     @Param("keyword") String keyword,
+                     Pageable pageable);
 
-   // 1. 카테고리와 검색어 둘 다 있을 때 
-    @Query("SELECT b FROM Board b WHERE b.category = :category AND " + 
-           "(b.title LIKE %:keyword% OR b.content LIKE %:keyword% OR b.hashtag LIKE %:keyword%)")
-    Page<Board> searchByCategoryAndKeyword(@Param("category") String category, 
-                                          @Param("keyword") String keyword, 
-                                          Pageable pageable); 
+       // 2. 카테고리만
+       Page<Board> findByCategory(String category, Pageable pageable);
 
-    // 2. 카테고리만 있을 때 (Pageable 추가)
-    Page<Board> findByCategory(String category, Pageable pageable); 
+       // 3. 검색어만
+       @Query("SELECT b FROM Board b WHERE " +
+                     "b.title LIKE %:keyword% OR b.content LIKE %:keyword% OR b.hashtag LIKE %:keyword%")
+       Page<Board> searchByKeyword(@Param("keyword") String keyword,
+                     Pageable pageable);
 
-    // 3. 검색어만 있을 때 (Pageable 추가)
-    @Query("SELECT b FROM Board b WHERE " +
-           "b.title LIKE %:keyword% OR b.content LIKE %:keyword% OR b.hashtag LIKE %:keyword%")
-    Page<Board> searchByKeyword(@Param("keyword") String keyword, 
-                                Pageable pageable); 
+       // 4. 해시태그만
+       Page<Board> findByHashtagContaining(String hashtag, Pageable pageable);
 
-    @Query("SELECT b.hashtag FROM Board b WHERE b.hashtag IS NOT NULL AND b.hashtag != '' GROUP BY b.hashtag ORDER BY COUNT(b.boardId) DESC")
-    List<String> findPopularHashtags(Pageable pageable);
-    
+       // 5. 카테고리 + 해시태그
+       Page<Board> findByCategoryAndHashtagContaining(String category, String hashtag, Pageable pageable);
+
+       // 6. 검색어 + 해시태그
+       @Query("SELECT b FROM Board b WHERE b.hashtag LIKE %:hashtag% AND " +
+                     "(b.title LIKE %:keyword% OR b.content LIKE %:keyword%)")
+       Page<Board> searchByKeywordAndHashtag(@Param("keyword") String keyword,
+                     @Param("hashtag") String hashtag,
+                     Pageable pageable);
+
+       // 7. 카테고리 + 검색어 + 해시태그 (전체 조합)
+       @Query("SELECT b FROM Board b WHERE b.category = :category AND b.hashtag LIKE %:hashtag% AND " +
+                     "(b.title LIKE %:keyword% OR b.content LIKE %:keyword%)")
+       Page<Board> searchByCategoryAndKeywordAndHashtag(@Param("category") String category,
+                     @Param("keyword") String keyword,
+                     @Param("hashtag") String hashtag,
+                     Pageable pageable);
+
+       // 인기 해시태그
+       @Query("SELECT b.hashtag FROM Board b WHERE b.hashtag IS NOT NULL AND b.hashtag != ''")
+       List<String> findAllHashtagStrings();
 }

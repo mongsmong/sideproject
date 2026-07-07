@@ -1,6 +1,7 @@
 package com.sideproject.sproject.service;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -34,8 +35,6 @@ public class OrderService {
         private final AccountRepository accountRepository;
         private final OrderFileRepository orderFileRepository;
 
-        // 1. 주문 신청 (저장 기능)
-        // DTO를 받아 엔티티로 변환 후 DB에 저장합니다.
         @Transactional
         public Long saveOrder(OrderDTO dto, Board board, Account buyer) {
 
@@ -43,18 +42,29 @@ public class OrderService {
                                 board.getBoardId(), buyer.getAccountId());
 
                 Order order;
+                boolean isNewEngagement;
 
                 if (existingOrder.isPresent()) {
-                        order = existingOrder.get(); // ← 같은 채팅방 그대로 재사용, 새로 안 만듦
-
-                        if ("COMPLETED".equals(order.getOrderStatus()) || "CANCELED".equals(order.getOrderStatus())) {
-                                order.setOrderStatus("REQUEST");
-                                order.setContent(dto.getContent());
-                                order.setDeadline(dto.getDeadline());
-                                order.setTotalPrice(dto.getTotalPrice());
-                                order.setOrderTitle(null); // 이전 회차 커스텀 제목도 초기화
-                        }
+                        order = existingOrder.get();
+                        isNewEngagement = "COMPLETED".equals(order.getOrderStatus())
+                                        || "CANCELED".equals(order.getOrderStatus());
                 } else {
+                        order = null;
+                        isNewEngagement = true;
+                }
+
+                // 새로운 거래를 시작하는 경우에만 슬롯 체크
+                if (isNewEngagement) {
+                        Account writer = board.getAccount();
+                        if (writer.getMaxSlots() != null && !writer.isAllowOverbooking()) {
+                                long activeCount = orderRepository.countActiveOrdersByWriter(writer.getAccountId());
+                                if (activeCount >= writer.getMaxSlots()) {
+                                        throw new IllegalStateException("작가의 작업 슬롯이 가득 찼습니다. 나중에 다시 시도해주세요.");
+                                }
+                        }
+                }
+
+                if (order == null) {
                         order = Order.builder()
                                         .boardId(board)
                                         .buyerId(buyer)
@@ -64,6 +74,12 @@ public class OrderService {
                                         .orderStatus("REQUEST")
                                         .build();
                         orderRepository.save(order);
+                } else if (isNewEngagement) {
+                        order.setOrderStatus("REQUEST");
+                        order.setContent(dto.getContent());
+                        order.setDeadline(dto.getDeadline());
+                        order.setTotalPrice(dto.getTotalPrice());
+                        order.setOrderTitle(null);
                 }
 
                 OrderMessage newRequestMsg = OrderMessage.builder()
@@ -106,19 +122,22 @@ public class OrderService {
 
         // 회원의 주문 내역 목록 조회
         public List<OrderDTO> getOrderList(String username) {
-                // 구매자 주문 리스트 조회
+                // 의뢰인+작성자 주문 리스트 조회
                 List<Order> buyerOrders = orderRepository.findByBuyerId_Username(username);
-
-                // 판매자주문 리스트 조회
                 List<Order> sellerOrders = orderRepository.findByBoardId_Account_Username(username);
-
-                // 리스트를 하나로 합치기
                 buyerOrders.addAll(sellerOrders);
 
                 // 전체 주문 리스트를 DTO로 변환하여 반환
                 return buyerOrders.stream()
                                 .distinct() // 중복 제거
                                 .map(this::toDTO)
+                                .sorted((a, b) -> {
+                                        LocalDateTime dateA = a.getLastMessageDate() != null ? a.getLastMessageDate()
+                                                            : a.getRegDate();
+                                        LocalDateTime dateB = b.getLastMessageDate() != null ? b.getLastMessageDate()
+                                                            : b.getRegDate();
+                                        return dateB.compareTo(dateA); // 최신 채팅이 위로
+                                })
                                 .collect(Collectors.toList());
         }
 
@@ -291,6 +310,7 @@ public class OrderService {
                                 .totalPrice(order.getTotalPrice())
                                 .orderStatus(order.getOrderStatus())
                                 .regDate(order.getRegDate())
+                                .lastMessageDate(orderMessageRepository.findLastMessageDate(order.getOrderId()))
                                 .build();
         }
 }

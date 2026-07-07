@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments/common :: head(${account.nickname} + '님의 프로필')}"></head>
+
+<body>
+    <header th:replace="~{fragments/common :: header}"></header>
+
+    <main class="container">
+        <div class="profile-header-card">
+            <img th:if="${account.profileImageUrl != null}" th:src="${account.profileImageUrl}"
+                class="profile-header-img">
+            <div th:unless="${account.profileImageUrl != null}" class="profile-header-placeholder"
+                th:text="${#strings.substring(account.nickname, 0, 1)}"></div>
+
+            <div class="profile-header-info">
+                <h3 th:text="${account.nickname}"></h3>
+                <div class="profile-stats">
+                    <span>
+                        진행중
+                        <strong th:text="${activeCount}"></strong>
+                        <span th:if="${account.maxSlots != null}"> / <span th:text="${account.maxSlots}"></span></span>
+                        <span th:unless="${account.maxSlots != null}"> (무제한)</span>
+                    </span>
+                    <span>완료 <strong th:text="${completedCount}"></strong>건</span>
+                </div>
+            </div>
+
+            <a th:if="${isOwner}" th:href="@{/account/mypage/info}" class="btn-sub">내 정보 수정</a>
+        </div>
+
+        <!-- 슬롯 현황: 본인/타인 모두 노출 -->
+        <div class="info-card">
+            <div class="info-header">
+                <h3>현재 슬롯</h3>
+            </div>
+            <div class="info-body">
+
+                <!-- 남이 보는 화면: 읽기 전용 -->
+                <div th:unless="${isOwner}">
+                    <div th:if="${account.maxSlots != null}" class="slot-box-list">
+                        <span th:each="i : ${#numbers.sequence(1, account.maxSlots)}"
+                            th:class="${i <= activeCount} ? 'slot-box filled' : 'slot-box'"></span>
+                    </div>
+                    <p th:unless="${account.maxSlots != null}" class="notice-text" style="margin-bottom:0;">무제한</p>
+
+                    <p class="slot-info-text">
+                        <span
+                            th:text="${account.allowOverbooking} ? '슬롯이 가득 차도 신청을 받습니다.' : '슬롯이 가득 차면 신청을 받지 않습니다.'"></span>
+                    </p>
+                </div>
+
+                <!-- 본인이 보는 화면: 보기 모드 + 수정 모드 -->
+                <div th:if="${isOwner}">
+                    <div id="slotViewMode">
+                        <div th:if="${account.maxSlots != null}" class="slot-box-list">
+                            <span th:each="i : ${#numbers.sequence(1, account.maxSlots)}"
+                                th:class="${i <= activeCount} ? 'slot-box filled' : 'slot-box'"></span>
+                        </div>
+                        <p th:unless="${account.maxSlots != null}" class="notice-text" style="margin-bottom:0;">무제한</p>
+
+                        <p class="slot-info-text">
+                            <span
+                                th:text="${account.allowOverbooking} ? '슬롯이 가득 차도 신청을 받습니다.' : '슬롯이 가득 차면 신청을 받지 않습니다.'"></span>
+                        </p>
+
+                        <button type="button" class="btn-sub" onclick="toggleSlotEdit(true)">수정</button>
+                    </div>
+
+                    <div id="slotEditMode" style="display:none;">
+                        <form th:action="@{/account/profile/slots}" method="post">
+                            <div class="form-group">
+                                <label>최대 작업 슬롯</label>
+                                <input type="number" name="maxSlots" th:value="${account.maxSlots}" min="1"
+                                    placeholder="비워두면 무제한">
+                            </div>
+                            <div class="form-group" style="flex-direction: row; align-items: center; gap: 8px;">
+                                <input type="checkbox" id="allowOverbooking" name="allowOverbooking"
+                                    th:checked="${account.allowOverbooking}" style="width:auto;">
+                                <label for="allowOverbooking" style="margin:0;">슬롯이 가득 차도 신청 받기</label>
+                            </div>
+                            <div class="action-btn-row">
+                                <button type="submit" class="btn-primary">저장</button>
+                                <button type="button" class="btn-sub" onclick="toggleSlotEdit(false)">취소</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- 게시글 목록 -->
+        <div class="info-card">
+            <div class="info-header">
+                <h3>작성한 게시글</h3>
+            </div>
+            <div class="info-body">
+                <div th:each="board : ${boards}" class="profile-board-item">
+                    <a th:href="@{/board/detail/{id}(id=${board.boardId})}" class="profile-board-title"
+                        th:text="${board.title}"></a>
+                    <span th:if="${board.postStatus == 'OFF'}" class="profile-board-status off">현재 마감</span>
+
+                    <div th:if="${isOwner}" class="profile-board-menu">
+                        <button type="button" class="profile-board-dots" onclick="toggleBoardMenu(this)">⋮</button>
+                        <div class="profile-board-dropdown">
+                            <a th:href="@{/board/edit/{id}(id=${board.boardId})}">수정</a>
+                            <form th:action="@{|/board/toggle/${board.boardId}|}" method="post">
+                                <button type="submit"
+                                    th:text="${board.postStatus == 'ON'} ? '마감 처리' : '마감 해제'"></button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <p th:if="${#lists.isEmpty(boards)}" class="notice-text">작성한 게시글이 없습니다.</p>
+            </div>
+        </div>
+    </main>
+
+    <footer th:replace="~{fragments/common :: footer}"></footer>
+
+    <script>
+        function toggleBoardMenu(btn) {
+            const dropdown = btn.nextElementSibling;
+            document.querySelectorAll('.profile-board-dropdown.show').forEach(el => {
+                if (el !== dropdown) el.classList.remove('show');
+            });
+            dropdown.classList.toggle('show');
+        }
+        document.addEventListener('click', function (e) {
+            if (!e.target.closest('.profile-board-menu')) {
+                document.querySelectorAll('.profile-board-dropdown.show').forEach(el => el.classList.remove('show'));
+            }
+        });
+
+
+        function toggleSlotEdit(editing) {
+            document.getElementById('slotViewMode').style.display = editing ? 'none' : 'block';
+            document.getElementById('slotEditMode').style.display = editing ? 'block' : 'none';
+        }
+    </script>
+</body>
+
+</html>

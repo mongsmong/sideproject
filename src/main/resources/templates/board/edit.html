@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments/common :: head('게시글 수정')}"></head>
+
+<body>
+    <header th:replace="~{fragments/common :: header}"></header>
+
+    <main class="container">
+        <div class="form-card">
+            <div class="form-header">
+                <h3>게시글 수정</h3>
+            </div>
+
+            <form th:action="@{|/board/edit/${board.boardId}|}" method="post" class="styled-form">
+
+                <div class="form-group">
+                    <label>제목</label>
+                    <input type="text" name="title" th:value="${board.title}" placeholder="게시글 제목을 입력하세요" required>
+                </div>
+
+                <div class="form-group">
+                    <label>카테고리</label>
+                    <select name="category">
+                        <option value="디자인" th:selected="${board.category == '디자인'}">디자인</option>
+                        <option value="일러스트" th:selected="${board.category == '일러스트'}">일러스트</option>
+                        <option value="영상" th:selected="${board.category == '영상'}">영상</option>
+                        <option value="음향" th:selected="${board.category == '음향'}">음향</option>
+                        <option value="기타" th:selected="${board.category == '기타'}">기타</option>
+                        <option value="구해요" th:selected="${board.category == '구해요'}">구해요</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>기본 가격 (원)</label>
+                    <input type="number" name="basePrice" th:value="${board.basePrice}" placeholder="예: 50000" required>
+                </div>
+
+                <div class="form-group">
+                    <label>해시태그</label>
+                    <input type="text" name="hashtag" th:value="${board.hashtag}" placeholder="#캐릭터 #일러스트 (공백으로 구분)">
+                </div>
+
+                <div class="form-group">
+                    <label>게시글 상세 내용</label>
+                    <textarea name="content" placeholder="게시글에 대한 설명을 적으세요" required th:text="${board.content}"></textarea>
+                </div>
+
+                <div class="action-btn-row">
+                    <button type="submit" class="btn-submit-action">수정 완료</button>
+                    <button type="button" class="btn-cancel"
+                        th:onclick="|location.href='@{/account/profile/{username}(username=${board.writerUsername})}'|">취소</button>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <footer th:replace="~{fragments/common :: footer}"></footer>
+</body>
+
+</html>
