@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
@@ -106,6 +107,7 @@ public class PaymentService {
         return (Integer) responseBody.get("amount");
     }
 
+    // 결제 토근
     private String getAccessToken() {
 
         RestTemplate restTemplate = new RestTemplate();
@@ -120,6 +122,30 @@ public class PaymentService {
         Map<String, Object> responseBody = (Map<String, Object>) response.get("response");
         return (String) responseBody.get("access_token");
 
+    }
+
+    // 환불
+    public void cancelPayment(String impUid, String reason) throws Exception {
+        RestTemplate restTemplate = new RestTemplate();
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", getAccessToken());
+        headers.set("Content-Type", "application/json");
+
+        Map<String, String> body = new HashMap<>();
+        body.put("imp_uid", impUid);
+        body.put("reason", reason);
+
+        HttpEntity<Map<String, String>> entity = new HttpEntity<>(body, headers);
+
+        ResponseEntity<Map> response = restTemplate.postForEntity(
+                "https://api.iamport.kr/payments/cancel",
+                entity,
+                Map.class);
+
+        Map responseBody = (Map) response.getBody().get("response");
+        if (responseBody == null) {
+            throw new IllegalStateException("환불 처리에 실패했습니다.");
+        }
     }
 
     private PaymentDTO toDTO(Payment payment) {

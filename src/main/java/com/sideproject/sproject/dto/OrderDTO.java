@@ -42,6 +42,9 @@ public class OrderDTO {
     private String orderStatus;   // 주문 상태
     private LocalDateTime regDate; // 주문 일시 
     private LocalDateTime lastMessageDate; // 마지막으로 받은 채팅
+
     
+    // 환불 
+    private String refundRequestedBy; // 환불요청자
 
 }

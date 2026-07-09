@@ -105,6 +105,26 @@ public class OrderController {
         return "/order/list";
     }
 
+
+    // 작업내역목록화면
+    @GetMapping("/worklist")
+    public String workList(@RequestParam(required = false, defaultValue = "all") String role,
+            Principal principal, Model model) {
+        List<OrderDTO> workList = orderService.getWorkList(principal.getName(), role);
+        model.addAttribute("workList", workList);
+        model.addAttribute("currentUsername", principal.getName());
+        model.addAttribute("roleFilter", role);
+        return "order/worklist";
+    }
+
+    @GetMapping("/worklist")
+    public String workList(Principal principal, Model model) {
+        List<OrderDTO> workList = orderService.getWorkList(principal.getName());
+        model.addAttribute("workList", workList);
+        model.addAttribute("currentUsername", principal.getName());
+        return "order/worklist";
+    }
+
     // 의뢰창
     @GetMapping("/detail/{chatRoomId}")
     public String orderDetail(@PathVariable Long chatRoomId, Principal principal, Model model) {
@@ -148,10 +168,12 @@ public class OrderController {
         model.addAttribute("messages", messages);
         model.addAttribute("isBuyer", isBuyer);
         model.addAttribute("isWriter", isWriter);
+        model.addAttribute("currentUsername", currentUsername);
 
         return "/order/info";
     }
 
+    // 작업물 컨펌
     @PostMapping("/confirm/{orderId}")
     public String confirmRequest(@PathVariable Long orderId,
             @RequestParam Integer totalPrice,
@@ -198,6 +220,27 @@ public class OrderController {
     @PostMapping("/approve/{orderId}")
     public String approveWork(@PathVariable Long orderId, Principal principal) {
         orderService.approveWork(orderId, principal.getName());
+        return "redirect:/order/info/" + orderId;
+    }
+
+    // 환불용 컨트롤러 [요청:동의:반려]
+    @PostMapping("/refund/request/{orderId}")
+    public String requestRefund(@PathVariable Long orderId,
+            @RequestParam String reason,
+            Principal principal) {
+        orderService.requestRefund(orderId, principal.getName(), reason);
+        return "redirect:/order/info/" + orderId;
+    }
+
+    @PostMapping("/refund/agree/{orderId}")
+    public String agreeRefund(@PathVariable Long orderId, Principal principal) throws Exception {
+        orderService.agreeRefund(orderId, principal.getName());
+        return "redirect:/order/info/" + orderId;
+    }
+
+    @PostMapping("/refund/reject/{orderId}")
+    public String rejectRefund(@PathVariable Long orderId, Principal principal) {
+        orderService.rejectRefund(orderId, principal.getName());
         return "redirect:/order/info/" + orderId;
     }
 }

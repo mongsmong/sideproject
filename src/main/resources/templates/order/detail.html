@@ -148,6 +148,31 @@
                         </button>
                     </div>
 
+                    <!-- 환불 요청 -->
+                    <div th:if="${msg.messageType != null and msg.messageType.trim().equals('REFUND_REQUEST')}"
+                        class="bubble bubble-card revision-card">
+                        <p class="pay-card-title">
+                            <span class="pay-card-title-ellipsis" th:text="${msg.orderTitle}"></span>에 대한 환불 요청이 도착했습니다.
+                        </p>
+                        <p class="timeline-text" th:text="${msg.content}"></p>
+                        <button type="button" class="btn-notice-action"
+                            th:onclick="|location.href='@{/order/info/{id}(id=${msg.orderId})}'|">
+                            의뢰서 상세
+                        </button>
+                    </div>
+
+                    <!-- 환불 완료 -->
+                    <div th:if="${msg.messageType != null and msg.messageType.trim().equals('REFUNDED')}"
+                        class="bubble bubble-card cancel-card">
+                        <p class="notice-text cancel-card-text" th:text="${msg.content}"></p>
+                    </div>
+
+                    <!-- 환불 거절 -->
+                    <div th:if="${msg.messageType != null and msg.messageType.trim().equals('REFUND_REJECTED')}"
+                        class="bubble bubble-card">
+                        <p class="notice-text" th:text="${msg.content}"></p>
+                    </div>
+
                     <!-- 일반 메시지 -->
                     <div th:if="${msg.messageType == null or (!msg.messageType.trim().equals('PAY_REQUEST') 
                                             and !msg.messageType.trim().equals('CANCELED') 
@@ -155,7 +180,10 @@
                                             and !msg.messageType.trim().equals('NEW_REQUEST')
                                             and !msg.messageType.trim().equals('SUBMIT')
                                             and !msg.messageType.trim().equals('APPROVED')
-                                            and !msg.messageType.trim().equals('REVISION_REQUEST'))}" class="bubble">
+                                            and !msg.messageType.trim().equals('REVISION_REQUEST') 
+                                            and !msg.messageType.trim().equals('REFUND_REQUEST')
+                                            and !msg.messageType.trim().equals('REFUNDED')
+                                            and !msg.messageType.trim().equals('REFUND_REJECTED'))}" class="bubble">
                         <span th:if="${msg.content != null and !msg.content.isEmpty()}" th:text="${msg.content}"></span>
                         <div th:if="${msg.files != null and !msg.files.isEmpty()}" class="chat-attach-list">
                             <div th:each="file : ${msg.files}">

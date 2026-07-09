@@ -246,6 +246,15 @@ a {
 
 .action-btn-row form {
     margin: 0;
+    flex: 1;
+}
+
+.action-btn-row .btn-primary,
+.action-btn-row .btn-sub {
+    width: 100%;
+    /* form 안에서는 100%로 채우되 */
+    margin-top: 0;
+    /* 위쪽 여백 제거 */
 }
 
 /* 금액 조절 버튼 없애기 (크롬, 사파리, 엣지) */
@@ -1226,6 +1235,12 @@ input[type="number"]::-webkit-inner-spin-button {
     background-color: #6d28d9;
 }
 
+.form-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
 .btn-cancel {
     width: 100%;
     padding: 12px;
@@ -1515,6 +1530,62 @@ input[type="number"]::-webkit-inner-spin-button {
    6. ORDER/LIST — 내 채팅방(주문) 목록
    ============================================================ */
 
+.role-filter-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.role-filter-tab {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #64748b;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+}
+
+.role-filter-tab.active {
+    background: #7c3aed;
+    color: #ffffff;
+    border-color: #7c3aed;
+}
+
+
+.order-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.order-tab {
+    padding: 10px 16px;
+    font-weight: 600;
+    color: #94a3b8;
+    border-bottom: 2px solid transparent;
+}
+
+.order-tab.active {
+    color: #7c3aed;
+    border-bottom-color: #7c3aed;
+}
+
+.order-status-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: rgba(0, 0, 0, 0.7);
+    color: #fff;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    z-index: 2;
+}
+
+
 .chat-list {
     display: flex;
     flex-direction: column;
@@ -1697,7 +1768,7 @@ input[type="number"]::-webkit-inner-spin-button {
 
 .btn-send:hover {
     background-color: #6d28d9;
-    
+
 }
 
 .btn-attach {

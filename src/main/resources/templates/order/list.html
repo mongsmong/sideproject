@@ -7,6 +7,10 @@
     <header th:replace="~{fragments/common :: header}"></header>
 
     <h2>내 주문 내역</h2>
+    <div class="order-tabs">
+        <a th:href="@{/order/list}" class="order-tab active">채팅창 목록</a>
+        <a th:href="@{/order/worklist}" class="order-tab">작업 목록</a>
+    </div>
     <div class="chat-list">
         <div th:each="order : ${orderList}" class="chat-room-wrapper"
             style="border-bottom: 1px solid #eee; padding: 10px;">
@@ -36,6 +40,10 @@
                             의뢰] </span>
                         <span th:if="${order.orderStatus == 'PAYMENT_WAITING'}"
                             style="color: #407af8; font-weight: bold;">[결제 요청함] </span>
+                        <span th:if="${order.orderStatus == 'REFUND_REQUESTED'}"
+                            style="color: #f59e0b; font-weight: bold;">[환불요청중] </span>
+                        <span th:if="${order.orderStatus == 'REFUNDED'}"
+                            style="color: #6b7280; font-weight: bold;">[환불됨] </span>
                         <span th:if="${order.orderStatus == 'PROCESSING'}"
                             style="color: #e73eaf; font-weight: bold;">[진행중] </span>
                         <span th:if="${order.orderStatus == 'SUBMITTED'}"
@@ -47,6 +55,7 @@
                         <span th:if="${order.orderStatus == 'CANCELED'}"
                             style="color: #8d8d8d; font-weight: bold;">[취소됨] </span>
                         <span th:text="${order.boardTitle}"></span>
+
                     </p>
                 </div>
             </a>

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments/common :: head('작업 목록')}"></head>
+
+<body>
+    <header th:replace="~{fragments/common :: header}"></header>
+
+    <main class="container">
+        <div class="order-tabs">
+            <a th:href="@{/order/list}" class="order-tab">채팅창 목록</a>
+            <a th:href="@{/order/worklist}" class="order-tab active">작업 목록</a>
+        </div>
+        <div class="role-filter-tabs">
+            <a th:href="@{/order/worklist}" class="role-filter-tab"
+                th:classappend="${roleFilter == null or roleFilter == 'all'} ? ' active' : ''">전체</a>
+            <a th:href="@{/order/worklist(role='writer')}" class="role-filter-tab"
+                th:classappend="${roleFilter == 'writer'} ? ' active' : ''">작업중</a>
+            <a th:href="@{/order/worklist(role='buyer')}" class="role-filter-tab"
+                th:classappend="${roleFilter == 'buyer'} ? ' active' : ''">의뢰중</a>
+        </div>
+
+        <div class="board-grid">
+            <div th:each="order : ${workList}" class="board-card"
+                th:onclick="|location.href='@{/order/info/{id}(id=${order.orderId})}'|" style="cursor:pointer;">
+
+                <div class="card-img" style="position: relative;">
+                    <img th:if="${(order.buyerUsername == currentUsername ? order.boardWriterProfileImageUrl : order.buyerProfileImageUrl) != null}"
+                        th:src="${order.buyerUsername == currentUsername ? order.boardWriterProfileImageUrl : order.buyerProfileImageUrl}"
+                        style="width:100%; height:100%; object-fit:cover;">
+                    <div th:unless="${(order.buyerUsername == currentUsername ? order.boardWriterProfileImageUrl : order.buyerProfileImageUrl) != null}"
+                        style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:#f1f5f9; color:#94a3b8; font-size:1.2rem;">
+                        No Image
+                    </div>
+
+                    <span class="order-status-badge" th:classappend="${'status-' + order.orderStatus.toLowerCase()}"
+                        th:text="${order.orderStatus == 'REQUEST'} ? '새로운 의뢰' :
+                                (${order.orderStatus == 'PAYMENT_WAITING'} ? '결제 요청함' :
+                                (${order.orderStatus == 'PROCESSING'} ? '진행중' :
+                                (${order.orderStatus == 'SUBMITTED'} ? '제출됨' :
+                                (${order.orderStatus == 'REVISION_REQUESTED'} ? '수정요청' :
+                                (${order.orderStatus == 'REFUND_REQUESTED'} ? '환불요청중' :
+                                (${order.orderStatus == 'REFUNDED'} ? '환불됨' :
+                                (${order.orderStatus == 'COMPLETED'} ? '완료됨' :
+                                (${order.orderStatus == 'CANCELED'} ? '취소됨' : ''))))))))">
+                    </span>
+                </div>
+
+                <div class="card-info">
+                    <h4 class="title" th:text="${order.orderTitle}"></h4>
+
+                    <div class="sub-info">
+                        <span class="price"
+                            th:text="${#numbers.formatInteger(order.totalPrice, 0, 'COMMA')} + '원'"></span>
+                    </div>
+
+                    <div class="writer"
+                        th:text="${order.buyerUsername == currentUsername ? order.boardWriterUsername : order.buyerNickname}">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <p th:if="${#lists.isEmpty(workList)}" class="notice-text" style="text-align:center; margin-top:40px;">
+            진행 중인 작업이 없습니다.
+        </p>
+    </main>
+
+    <footer th:replace="~{fragments/common :: footer}"></footer>
+</body>
+
+</html>

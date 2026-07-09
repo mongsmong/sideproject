@@ -10,7 +10,8 @@ import lombok.*;
 
 @Table(name = "PAYMENT")
 @Entity
-@Getter @Setter
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -44,4 +45,11 @@ public class Payment {
     @UpdateTimestamp
     @Column
     private LocalDateTime modifiedDate; // 결제 상태 변경 일시
+
+    // 환불용
+    @Column
+    private Integer refundedAmount; // 가격
+
+    @Column(length = 500)
+    private String refundReason; // 사유
 }

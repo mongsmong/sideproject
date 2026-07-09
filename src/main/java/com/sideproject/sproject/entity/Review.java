@@ -20,7 +20,7 @@ public class Review {
     private Long reviewId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "board_id") // BOARD 테이블의 FK 매핑
+    @JoinColumn(name = "board_id", nullable = false, unique = true) // BOARD 테이블의 FK 매핑
     private Board boardId;
 
     @ManyToOne(fetch = FetchType.LAZY)

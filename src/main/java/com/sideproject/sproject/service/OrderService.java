@@ -21,11 +21,13 @@ import com.sideproject.sproject.entity.ChatRoom;
 import com.sideproject.sproject.entity.Order;
 import com.sideproject.sproject.entity.OrderFile;
 import com.sideproject.sproject.entity.OrderMessage;
+import com.sideproject.sproject.entity.Payment;
 import com.sideproject.sproject.repository.AccountRepository;
 import com.sideproject.sproject.repository.ChatRoomRepository;
 import com.sideproject.sproject.repository.OrderFileRepository;
 import com.sideproject.sproject.repository.OrderMessageRepository;
 import com.sideproject.sproject.repository.OrderRepository;
+import com.sideproject.sproject.repository.PaymentRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -111,6 +113,40 @@ public class OrderService {
                 orderMessageRepository.save(approveMsg);
         }
 
+        // 의뢰 거절/취소 (REQUEST 또는 PAYMENT_WAITING > CANCELED)
+        @Transactional
+        public void cancelOrder(Long orderId, String username) {
+                Order order = orderRepository.findById(orderId)
+                                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 주문입니다. id=" + orderId));
+
+                boolean isBuyer = order.getBuyerId().getUsername().equals(username);
+                boolean isWriter = order.getBoardId().getAccount().getUsername().equals(username);
+
+                if (!isBuyer && !isWriter) {
+                        throw new IllegalStateException("취소 권한이 없습니다.");
+                }
+
+                // 이미 취소되었거나, 결제가 끝나 진행 중인 주문은 취소 불가
+                if ("CANCELED".equals(order.getOrderStatus()) || "PROCESSING".equals(order.getOrderStatus())) {
+                        throw new IllegalStateException("이미 취소되었거나 진행 중인 주문은 취소할 수 없습니다.");
+                }
+
+                Account actor = accountRepository.findByUsername(username)
+                                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
+
+                order.setOrderStatus("CANCELED");
+
+                String actorLabel = isWriter ? "작가" : "의뢰인";
+                OrderMessage cancelMsg = OrderMessage.builder()
+                                .orderId(order)
+                                .senderId(actor)
+                                .messageType("CANCELED")
+                                .content(actor.getNickname() + "(" + actorLabel + ")님이 의뢰를 취소했습니다.")
+                                .build();
+
+                orderMessageRepository.save(cancelMsg);
+        }
+
         // 채팅방 조회
         public ChatRoomDTO getChatRoomDetail(Long chatRoomId) {
                 ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
@@ -126,6 +162,66 @@ public class OrderService {
                                 .buyerNickname(chatRoom.getBuyerId().getNickname())
                                 .buyerProfileImageUrl(chatRoom.getBuyerId().getProfileImageUrl())
                                 .build();
+        }
+
+        // 작업 목록 조회
+        public List<OrderDTO> getWorkList(String username) {
+                return orderRepository.findAllByUsername(username)
+                                .stream()
+                                .map(this::toDTO)
+                                .collect(Collectors.toList());
+        }
+
+        // 작업 목록 role 조회
+        public List<OrderDTO> getWorkList(String username, String role) {
+
+                //  role 파라미터(all/writer/buyer) 조회할 거래 목록을 다르게 
+                List<Order> orders;
+                if ("writer".equals(role)) {
+                        orders = orderRepository.findAllByWriterUsername(username);
+                } else if ("buyer".equals(role)) {
+                        orders = orderRepository.findByBuyerId_Username(username);
+                } else {
+                        orders = orderRepository.findAllByUsername(username);
+                }
+
+                // 이미 끝난 거래 < 상태 목록 정의 :: 맨 아래로
+                List<String> finishedStatuses = List.of("COMPLETED", "REFUNDED", "CANCELED");
+
+                return orders.stream()
+                                .map(this::toDTO) // Order 엔티티 리스트를 화면에서 쓸 OrderDTO 리스트로 변환
+                                // 3. sorted()에 비교 규칙(Comparator)을 직접 넣어서 정렬
+                                // 자바의 sorted는 (a, b)를 비교해서
+                                // 음수 반환 → a가 앞으로, 양수 반환 → b가 앞으로, 0 → 순서 유지
+                                .sorted((a, b) -> {
+
+                                        // 3-1. 지금 비교 중인 두 거래가 각각 "끝난 거래"인지 여부를 미리 판단
+                                        boolean aFinished = finishedStatuses.contains(a.getOrderStatus());
+                                        boolean bFinished = finishedStatuses.contains(b.getOrderStatus());
+
+                                        // 3-2. 한쪽만 끝났고 한쪽은 진행 중이면,
+                                        // 무조건 "진행 중인 쪽"이 위로 오도록 정렬
+                                        // (a가 끝났으면 1을 반환해서 a를 뒤로 보냄,
+                                        // a가 진행중이면 -1을 반환해서 a를 앞으로 보냄)
+                                        if (aFinished != bFinished) {
+                                                return aFinished ? 1 : -1;
+                                        }
+
+                                        // 3-3. 둘 다 아직 진행 중인 경우 → 마감일이 빠른 순서로 정렬
+                                        // 마감일이 없는 거래는 뒤로 보냄 (기준을 정하기 애매하니까)
+                                        if (!aFinished) {
+                                                if (a.getDeadline() == null)
+                                                        return 1; // a만 마감일 없음 → a를 뒤로
+                                                if (b.getDeadline() == null)
+                                                        return -1; // b만 마감일 없음 → b를 뒤로
+                                                return a.getDeadline().compareTo(b.getDeadline()); // 마감일 오름차순(빠른 게 위)
+                                        }
+
+                                        // 3-4. 둘 다 이미 끝난 거래인 경우 → 최근에 생성된 순서로 정렬
+                                        // (b.compareTo(a)로 바꿔서 내림차순, 즉 최신이 위로 오게 함)
+                                        return b.getRegDate().compareTo(a.getRegDate());
+                                })
+                                .collect(Collectors.toList()); // 정렬 끝난 스트림을 다시 List로 변환
         }
 
         // 회원의 주문 내역 목록 조회
@@ -216,40 +312,6 @@ public class OrderService {
                 orderMessageRepository.save(payRequestMsg);
         }
 
-        // 의뢰 거절/취소 (REQUEST 또는 PAYMENT_WAITING > CANCELED)
-        @Transactional
-        public void cancelOrder(Long orderId, String username) {
-                Order order = orderRepository.findById(orderId)
-                                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 주문입니다. id=" + orderId));
-
-                boolean isBuyer = order.getBuyerId().getUsername().equals(username);
-                boolean isWriter = order.getBoardId().getAccount().getUsername().equals(username);
-
-                if (!isBuyer && !isWriter) {
-                        throw new IllegalStateException("취소 권한이 없습니다.");
-                }
-
-                // 이미 취소되었거나, 결제가 끝나 진행 중인 주문은 취소 불가
-                if ("CANCELED".equals(order.getOrderStatus()) || "PROCESSING".equals(order.getOrderStatus())) {
-                        throw new IllegalStateException("이미 취소되었거나 진행 중인 주문은 취소할 수 없습니다.");
-                }
-
-                Account actor = accountRepository.findByUsername(username)
-                                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
-
-                order.setOrderStatus("CANCELED");
-
-                String actorLabel = isWriter ? "작가" : "의뢰인";
-                OrderMessage cancelMsg = OrderMessage.builder()
-                                .orderId(order)
-                                .senderId(actor)
-                                .messageType("CANCELED")
-                                .content(actor.getNickname() + "(" + actorLabel + ")님이 의뢰를 취소했습니다.")
-                                .build();
-
-                orderMessageRepository.save(cancelMsg);
-        }
-
         private final Cloudinary cloudinary;
 
         // 작업물 제출
@@ -323,6 +385,110 @@ public class OrderService {
                 orderMessageRepository.save(revisionMsg);
         }
 
+        private final PaymentRepository paymentRepository;
+        private final PaymentService paymentService;
+
+        // 환불 요청
+        @Transactional
+        public void requestRefund(Long orderId, String username, String reason) {
+                Order order = orderRepository.findById(orderId)
+                                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 주문입니다."));
+
+                boolean isBuyer = order.getBuyerId().getUsername().equals(username);
+                boolean isWriter = order.getBoardId().getAccount().getUsername().equals(username);
+                if (!isBuyer && !isWriter) {
+                        throw new IllegalStateException("권한이 없습니다.");
+                }
+
+                List<String> allowed = List.of("PROCESSING", "SUBMITTED", "REVISION_REQUESTED");
+                if (!allowed.contains(order.getOrderStatus())) {
+                        throw new IllegalStateException("지금은 환불 요청이 불가능한 상태입니다.");
+                }
+
+                order.setPreRefundStatus(order.getOrderStatus());
+                order.setRefundRequestedBy(username);
+                order.setOrderStatus("REFUND_REQUESTED");
+
+                Account sender = accountRepository.findByUsername(username)
+                                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
+
+                OrderMessage msg = OrderMessage.builder()
+                                .orderId(order)
+                                .senderId(sender)
+                                .messageType("REFUND_REQUEST")
+                                .content(reason)
+                                .build();
+                orderMessageRepository.save(msg);
+        }
+
+        // 환불 동의 (상대방만 가능)
+        @Transactional
+        public void agreeRefund(Long orderId, String username) throws Exception {
+                Order order = orderRepository.findById(orderId)
+                                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 주문입니다."));
+
+                if (!"REFUND_REQUESTED".equals(order.getOrderStatus())) {
+                        throw new IllegalStateException("환불 요청 상태가 아닙니다.");
+                }
+                if (username.equals(order.getRefundRequestedBy())) {
+                        throw new IllegalStateException("본인이 요청한 환불에는 동의할 수 없습니다. 상대방의 동의가 필요합니다.");
+                }
+
+                Payment payment = paymentRepository.findByOrderId_OrderId(orderId)
+                                .orElseThrow(() -> new IllegalArgumentException("결제 정보가 없습니다."));
+
+                // 포트원 환불 API 호출
+                paymentService.cancelPayment(payment.getPaymentUid(), "상호 합의에 의한 환불");
+
+                payment.setPaymentStatus("REFUNDED");
+                payment.setRefundedAmount(payment.getAmount());
+                paymentRepository.save(payment);
+
+                order.setOrderStatus("REFUNDED");
+                order.setPreRefundStatus(null);
+                order.setRefundRequestedBy(null);
+
+                Account sender = accountRepository.findByUsername(username)
+                                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
+
+                OrderMessage msg = OrderMessage.builder()
+                                .orderId(order)
+                                .senderId(sender)
+                                .messageType("REFUNDED")
+                                .content("환불이 완료되었습니다. (" + payment.getAmount() + "원)")
+                                .build();
+                orderMessageRepository.save(msg);
+        }
+
+        // 환불 거절 (상대방만 가능, 원래 상태로 복원)
+        @Transactional
+        public void rejectRefund(Long orderId, String username) {
+                Order order = orderRepository.findById(orderId)
+                                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 주문입니다."));
+
+                if (!"REFUND_REQUESTED".equals(order.getOrderStatus())) {
+                        throw new IllegalStateException("환불 요청 상태가 아닙니다.");
+                }
+                if (username.equals(order.getRefundRequestedBy())) {
+                        throw new IllegalStateException("본인이 요청한 환불은 거절할 수 없습니다.");
+                }
+
+                order.setOrderStatus(order.getPreRefundStatus());
+                order.setPreRefundStatus(null);
+                order.setRefundRequestedBy(null);
+
+                Account sender = accountRepository.findByUsername(username)
+                                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
+
+                OrderMessage msg = OrderMessage.builder()
+                                .orderId(order)
+                                .senderId(sender)
+                                .messageType("REFUND_REJECTED")
+                                .content("환불 요청이 거절되었습니다.")
+                                .build();
+                orderMessageRepository.save(msg);
+        }
+
         private OrderDTO toDTO(Order order) {
                 return OrderDTO.builder()
                                 .orderId(order.getOrderId())
@@ -342,6 +508,7 @@ public class OrderService {
                                 .orderStatus(order.getOrderStatus())
                                 .regDate(order.getRegDate())
                                 .lastMessageDate(orderMessageRepository.findLastMessageDate(order.getOrderId()))
+                                .refundRequestedBy(order.getRefundRequestedBy()) // 환불요청자
                                 .build();
         }
 }

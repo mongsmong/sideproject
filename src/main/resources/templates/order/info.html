@@ -37,8 +37,9 @@
                 </div>
 
                 <!-- 작가 화면: 결제 요청 / 의뢰 거절 -->
-                <div th:if="${isWriter and !order.orderStatus.trim().equals('CANCELED')}" class="action-section">
-
+                <div th:if="${isWriter and (order.orderStatus.trim().equals('REQUEST') 
+                            or order.orderStatus.trim().equals('PAYMENT_WAITING') 
+                            or order.orderStatus.trim().equals('PROCESSING'))}" class="action-section">
                     <form th:action="@{|/order/confirm/${order.orderId}|}" method="post">
                         <div class="form-group">
                             <label>작업물 제목</label>
@@ -106,6 +107,44 @@
                             </button>
                         </form>
                     </div>
+                </div>
+
+                <!-- 환불 요청 섹션: PROCESSING/SUBMITTED/REVISION_REQUESTED 일 때만 -->
+                <div th:if="${order.orderStatus.trim().equals('PROCESSING') 
+            or order.orderStatus.trim().equals('SUBMITTED') 
+            or order.orderStatus.trim().equals('REVISION_REQUESTED')}" class="action-section">
+                    <button type="button" class="btn-sub"
+                        onclick="document.getElementById('refundForm').style.display='block'">
+                        환불 요청
+                    </button>
+                    <form id="refundForm" th:action="@{|/order/refund/request/${order.orderId}|}" method="post"
+                        class="revision-form" onsubmit="return confirm('환불을 요청하시겠습니까? 상대방의 동의가 필요합니다.');">
+                        <textarea name="reason" required placeholder="환불 요청 사유를 남겨주세요."
+                            class="revision-textarea"></textarea>
+                        <button type="submit" class="btn-sub revision-submit-btn">환불 요청 보내기</button>
+                    </form>
+                </div>
+
+                <!-- 환불 동의/거절 섹션: REFUND_REQUESTED -->
+                <div th:if="${order.orderStatus.trim().equals('REFUND_REQUESTED') and currentUsername != order.refundRequestedBy}"
+                    class="action-section">
+                    <p class="notice-text">상대방이 환불을 요청했습니다. 동의하시겠습니까?</p>
+                    <div class="action-btn-row">
+                        <form th:action="@{|/order/refund/agree/${order.orderId}|}" method="post"
+                            onsubmit="return confirm('환불에 동의하시겠습니까? 결제 금액이 환불되며 되돌릴 수 없습니다.');">
+                            <button type="submit" class="btn-primary">환불 동의</button>
+                        </form>
+                        <form th:action="@{|/order/refund/reject/${order.orderId}|}" method="post"
+                            onsubmit="return confirm('환불 요청을 거절하시겠습니까?');">
+                            <button type="submit" class="btn-sub">환불 거절</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- 요청한 사람에게는 대기 중임을 표시 -->
+                <div th:if="${order.orderStatus.trim().equals('REFUND_REQUESTED') and currentUsername == order.refundRequestedBy}"
+                    class="action-section">
+                    <p class="notice-text">환불 요청을 보냈습니다. 상대방의 응답을 기다리는 중입니다.</p>
                 </div>
             </div>
 

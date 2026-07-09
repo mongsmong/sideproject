@@ -55,7 +55,10 @@ public class Order {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "chat_room_id")
     private ChatRoom chatRoom;
-    
 
+    @Column(length = 20)
+    private String preRefundStatus; // 환불 요청 전 상태 (거절 복원용)
 
+    @Column
+    private String refundRequestedBy; // 환불 요청한 쪽의 username
 }

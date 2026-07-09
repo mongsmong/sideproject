@@ -12,24 +12,33 @@ import com.sideproject.sproject.entity.Order;
 // save() 메소드는 스프링 데이터 JPA가 제공하는 기본 기능 
 // 인터페이스가 이를 상속받아야 함
 public interface OrderRepository extends JpaRepository<Order, Long> {
-    List<Order> findByBuyerId_Username(String username);
+        List<Order> findByBuyerId_Username(String username);
 
-    List<Order> findByBoardId_Account_Username(String username);
+        List<Order> findByBoardId_Account_Username(String username);
 
-    Optional<Order> findByBoardId_BoardIdAndBuyerId_AccountId(Long boardId, Long buyerId);
+        Optional<Order> findByBoardId_BoardIdAndBuyerId_AccountId(Long boardId, Long buyerId);
 
-    @Query("SELECT COUNT(o) FROM Order o WHERE o.boardId.account.accountId = :writerId " +
-            "AND o.orderStatus IN ('PAYMENT_WAITING', 'PROCESSING', 'SUBMITTED', 'REVISION_REQUESTED')")
-    long countActiveOrdersByWriter(@Param("writerId") Long writerId);
+        @Query("SELECT COUNT(o) FROM Order o WHERE o.boardId.account.accountId = :writerId " +
+                        "AND o.orderStatus IN ('PAYMENT_WAITING', 'PROCESSING', 'SUBMITTED', 'REVISION_REQUESTED')")
+        long countActiveOrdersByWriter(@Param("writerId") Long writerId);
 
-    @Query("SELECT COUNT(o) FROM Order o WHERE o.boardId.account.accountId = :writerId " +
-            "AND o.orderStatus = 'COMPLETED'")
-    long countCompletedOrdersByWriter(@Param("writerId") Long writerId);
+        @Query("SELECT COUNT(o) FROM Order o WHERE o.boardId.account.accountId = :writerId " +
+                        "AND o.orderStatus = 'COMPLETED'")
+        long countCompletedOrdersByWriter(@Param("writerId") Long writerId);
 
-    // 글에 대한 작업수
-    @Query("SELECT COUNT(o) FROM Order o WHERE o.boardId.boardId = :boardId AND o.orderStatus = 'COMPLETED'")
-    long countCompletedOrdersByBoard(@Param("boardId") Long boardId);
+        // 글에 대한 작업수
+        @Query("SELECT COUNT(o) FROM Order o WHERE o.boardId.boardId = :boardId AND o.orderStatus = 'COMPLETED'")
+        long countCompletedOrdersByBoard(@Param("boardId") Long boardId);
 
-    // 채팅방 최신 거래 조회
-    Optional<Order> findTopByChatRoom_ChatRoomIdOrderByRegDateDesc(Long chatRoomId);
+        // 채팅방 최신 거래 조회
+        Optional<Order> findTopByChatRoom_ChatRoomIdOrderByRegDateDesc(Long chatRoomId);
+
+        // 사용자의 모든 거래 조회
+        @Query("SELECT o FROM Order o WHERE o.buyerId.username = :username OR o.boardId.account.username = :username " +
+                        "ORDER BY o.regDate DESC")
+        List<Order> findAllByUsername(@Param("username") String username);
+
+        // writer 전용 조회
+        @Query("SELECT o FROM Order o WHERE o.boardId.account.username = :username ORDER BY o.regDate DESC")
+        List<Order> findAllByWriterUsername(@Param("username") String username);
 }
