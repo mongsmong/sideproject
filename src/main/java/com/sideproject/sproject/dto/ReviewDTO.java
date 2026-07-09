@@ -15,7 +15,7 @@ public class ReviewDTO {
 
     private Long reviewId;
     private Long orderId;    // 게시글 연결을 위한 ID
-    private Long orderTitle;
+    private String orderTitle;
     private Long buyerId;    // 작성자(구매자) 연결을 위한 ID
     private String buyerNickname; // 화면 표시용 닉네임
     private String buyerProfileImageUrl;

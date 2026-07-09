@@ -10,7 +10,8 @@ import lombok.*;
 @Table(name = "REVIEW") // 테이블 명시
 @NoArgsConstructor
 @AllArgsConstructor
-@Getter @Setter
+@Getter
+@Setter
 @Builder
 public class Review {
 
@@ -20,8 +21,8 @@ public class Review {
     private Long reviewId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "board_id", nullable = false, unique = true) // BOARD 테이블의 FK 매핑
-    private Board boardId;
+    @JoinColumn(name = "order_id", nullable = false, unique = true)
+    private Order orderId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "buyer_id") // Account 테이블(의뢰인) FK 매핑

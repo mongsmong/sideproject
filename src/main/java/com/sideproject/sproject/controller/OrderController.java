@@ -218,8 +218,10 @@ public class OrderController {
     }
 
     @PostMapping("/approve/{orderId}")
-    public String approveWork(@PathVariable Long orderId, Principal principal) {
+    public String approveWork(@PathVariable Long orderId, Principal principal,
+                                RedirectAttributes redirectAttributes) {
         orderService.approveWork(orderId, principal.getName());
+        redirectAttributes.addFlashAttribute("showReviewPrompt", true);
         return "redirect:/order/info/" + orderId;
     }
 

@@ -158,8 +158,8 @@
                         class="timeline-item">
 
                         <div class="timeline-dot" th:classappend="${
-                msg.messageType.trim().equals('CANCELED')} ? 'dot-red' :
-                (${msg.messageType.trim().equals('PAID')} ? 'dot-green' : 'dot-purple')">
+                        msg.messageType.trim().equals('CANCELED')} ? 'dot-red' :
+                        (${msg.messageType.trim().equals('PAID')} ? 'dot-green' : 'dot-purple')">
                         </div>
 
                         <div class="timeline-content">
@@ -224,6 +224,7 @@
                         </div>
                     </div>
 
+
                     <!-- 수정 작업중: REVISION_REQUESTED일 때 -->
                     <div th:if="${order.orderStatus.trim().equals('REVISION_REQUESTED')}" class="timeline-item">
                         <div class="timeline-dot dot-pending"></div>
@@ -232,6 +233,13 @@
                             <p class="timeline-text" th:if="${isWriter}">의뢰인의 수정 요청을 반영해 재제출해주세요.</p>
                             <p class="timeline-text" th:if="${isBuyer}">작가가 수정 작업을 진행 중입니다.</p>
                         </div>
+                    </div>
+
+                    <div th:if="${isBuyer and order.orderStatus.trim().equals('COMPLETED')}" class="action-section">
+                        <a th:href="@{|/review/register/${order.orderId}|}" class="btn-primary"
+                            style="display:block; text-align:center;">
+                            리뷰 작성하기
+                        </a>
                     </div>
                 </div>
             </div>
@@ -266,8 +274,35 @@
             </form>
         </div>
 
+        <!-- 리뷰  팝업 -->
+        <div id="reviewPromptModal" class="modal-overlay" style="display:none;">
+            <div class="modal-box">
+                <h3>작업이 완료되었습니다! </h3>
+                <p>
+                    <span th:text="${order.boardWriterNickname}"></span>님과의 작업은 어떠셨나요? 리뷰를 남겨주세요.
+                </p>
+                <div class="modal-btn-row">
+                    <button type="button" class="btn-primary"
+                        th:onclick="|location.href='@{/review/register/{id}(id=${order.orderId})}'|">
+                        리뷰 작성하기
+                    </button>
+                    <button type="button" class="btn-sub" onclick="closeReviewPrompt()">나중에 할게요</button>
+                </div>
+            </div>
+        </div>
+        <script th:inline="javascript">
+            /*<![CDATA[*/
+            const showReviewPrompt = /*[[${showReviewPrompt}]]*/ false;
+            /*]]>*/
 
+            if (showReviewPrompt) {
+                document.getElementById('reviewPromptModal').style.display = 'flex';
+            }
 
+            function closeReviewPrompt() {
+                document.getElementById('reviewPromptModal').style.display = 'none';
+            }
+        </script>
 
 
         <script>

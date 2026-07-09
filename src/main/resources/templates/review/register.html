@@ -1,24 +1,42 @@
-<div class="form-card">
-    <h3>리뷰 작성하기</h3>
-    <form th:action="@{/review/register}" method="post" class="styled-form">
-        <input type="hidden" name="boardId" th:value="${board.boardId}">
-        
-        <div class="form-group">
-            <label>평점</label>
-            <select name="rating">
-                <option value="5">★★★★★ (5점)</option>
-                <option value="4">★★★★ (4점)</option>
-                <option value="3">★★★ (3점)</option>
-                <option value="2">★★ (2점)</option>
-                <option value="1">★ (1점)</option>
-            </select>
-        </div>
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
 
-        <div class="form-group">
-            <label>리뷰 내용</label>
-            <textarea name="content" placeholder="솔직한 리뷰를 작성해주세요." required></textarea>
-        </div>
+<head th:replace="~{fragments/common :: head('리뷰 작성')}"></head>
 
-        <button type="submit" class="btn-submit-action">리뷰 등록</button>
-    </form>
-</div>
+<body>
+    <header th:replace="~{fragments/common :: header}"></header>
+
+    <main class="container">
+        <div class="form-card">
+            <div class="form-header">
+                <h3>리뷰 작성하기</h3>
+                <p th:text="${order.orderTitle}"></p>
+            </div>
+
+            <form th:action="@{|/review/register/${order.orderId}|}" method="post" class="styled-form">
+
+                <div class="form-group">
+                    <label>평점</label>
+                    <select name="rating">
+                        <option value="5">★★★★★ (5점)</option>
+                        <option value="4">★★★★ (4점)</option>
+                        <option value="3">★★★ (3점)</option>
+                        <option value="2">★★ (2점)</option>
+                        <option value="1">★ (1점)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>리뷰 내용</label>
+                    <textarea name="content" placeholder="솔직한 리뷰를 작성해주세요." required></textarea>
+                </div>
+
+                <button type="submit" class="btn-submit-action">리뷰 등록</button>
+            </form>
+        </div>
+    </main>
+
+    <footer th:replace="~{fragments/common :: footer}"></footer>
+</body>
+
+</html>

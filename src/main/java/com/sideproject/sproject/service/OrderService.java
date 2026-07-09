@@ -497,6 +497,7 @@ public class OrderService {
                                 .orderTitle(order.getOrderTitle() != null ? order.getOrderTitle()
                                                 : order.getBoardId().getTitle())
                                 .boardWriterUsername(order.getBoardId().getAccount().getUsername()) // 판매자
+                                .boardWriterNickname(order.getBoardId().getAccount().getNickname())   // 작성자 닉네임
                                 .boardWriterProfileImageUrl(order.getBoardId().getAccount().getProfileImageUrl())
                                 .chatRoomId(order.getChatRoom() != null ? order.getChatRoom().getChatRoomId() : null)
                                 .buyerUsername(order.getBuyerId().getUsername()) // 구매자
