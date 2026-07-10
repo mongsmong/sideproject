@@ -68,8 +68,16 @@
 
             <div class="button-group">
                 <th:block sec:authorize="isAuthenticated() and hasRole('ROLE_CLIENT')">
-                    <a th:if="${#authentication.name != board.writerUsername}"
-                        th:href="@{/order/create/{id}(id=${board.boardId})}" class="btn-blue">신청하기</a>
+                    <a th:if="${#authentication.name != board.writerUsername and board.postStatus != 'OFF' and !slotFull}"
+                        th:href="@{/order/create/{id}(id=${board.boardId})}" class="btn-blue">
+                        신청하기
+                    </a>
+                    <span class="tooltip-wrap"
+                        th:if="${#authentication.name != board.writerUsername and (board.postStatus == 'OFF' or slotFull)}">
+                        <a class="btn-blue btn-disabled-link">신청하기</a>
+                        <span class="tooltip-text"
+                            th:text="${board.postStatus == 'OFF'} ? '마감된 게시글입니다.' : '작가의 작업 슬롯이 가득 찼습니다.'"></span>
+                    </span>
                 </th:block>
                 <a th:href="@{/board/list}" class="btn-gray">목록으로</a>
             </div>
@@ -79,32 +87,63 @@
             <a th:href="@{/review/register/{boardId}(boardId=${board.boardId})}" class="btn-review">리뷰 작성하기</a>
         </div>
 
+        <!-- 리뷰란 -->
+        <div th:if="${reviews != null and !reviews.isEmpty()}" class="review-list-card">
+            <h4>리뷰 <span th:text="'(' + ${reviews.size()} + ')'"></span></h4>
+
+            <div th:each="review : ${reviews}" class="review-item">
+                <div class="review-item-header">
+                    <img th:if="${review.buyerProfileImageUrl != null}" th:src="${review.buyerProfileImageUrl}"
+                        class="review-profile-img">
+                    <div th:unless="${review.buyerProfileImageUrl != null}" class="review-profile-placeholder"
+                        th:text="${#strings.substring(review.buyerNickname, 0, 1)}"></div>
+
+                    <span class="review-nickname" th:text="${review.buyerNickname}"></span>
+
+                    <span class="review-stars">
+                        <span th:each="i : ${#numbers.sequence(1, 5)}"
+                            th:text="${i <= review.rating} ? '★' : '☆'"></span>
+                    </span>
+
+                    <span class="review-date" th:text="${#temporals.format(review.regDate, 'yyyy-MM-dd')}"></span>
+                </div>
+
+                <p class="review-content" th:text="${review.content}"></p>
+            </div>
+        </div>
+
+        <div th:if="${reviews == null or reviews.isEmpty()}" class="review-list-card">
+            <h4>리뷰 <span>(0)</span></h4>
+            <p class="notice-text" style="text-align:center; margin: 10px 0 0;">
+                아직 작성된 리뷰가 없습니다.
+            </p>
+        </div>
     </main>
 
     <script>
-    let galleryIndex = 0;
+        let galleryIndex = 0;
 
-    function galleryMove(direction) {
-        const track = document.getElementById('galleryTrack');
-        const slideCount = track.children.length;
-        galleryIndex = (galleryIndex + direction + slideCount) % slideCount;
-        updateGallery();
-    }
+        function galleryMove(direction) {
+            const track = document.getElementById('galleryTrack');
+            const slideCount = track.children.length;
+            galleryIndex = (galleryIndex + direction + slideCount) % slideCount;
+            updateGallery();
+        }
 
-    function galleryGoTo(index) {
-        galleryIndex = index;
-        updateGallery();
-    }
+        function galleryGoTo(index) {
+            galleryIndex = index;
+            updateGallery();
+        }
 
-    function updateGallery() {
-        const track = document.getElementById('galleryTrack');
-        track.style.transform = `translateX(-${galleryIndex * 100}%)`;
+        function updateGallery() {
+            const track = document.getElementById('galleryTrack');
+            track.style.transform = `translateX(-${galleryIndex * 100}%)`;
 
-        document.querySelectorAll('.gallery-dot').forEach((dot, i) => {
-            dot.classList.toggle('active', i === galleryIndex);
-        });
-    }
-</script>
+            document.querySelectorAll('.gallery-dot').forEach((dot, i) => {
+                dot.classList.toggle('active', i === galleryIndex);
+            });
+        }
+    </script>
 
     <footer th:replace="~{fragments/common :: footer}"></footer>
 </body>

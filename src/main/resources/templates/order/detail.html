@@ -119,7 +119,11 @@
                     <!-- 취소 -->
                     <div th:if="${msg.messageType != null and msg.messageType.trim().equals('CANCELED')}"
                         class="bubble bubble-card cancel-card">
-                        <p class="notice-text cancel-card-text" th:text="${msg.content}"></p>
+                        <p class="pay-card-title cancel-card-text" th:text="${msg.content}"></p>
+                        <button type="button" class="btn-notice-action"
+                            th:onclick="|location.href='@{/order/info/{id}(id=${msg.orderId})}'|">
+                            의뢰서 상세
+                        </button>
                     </div>
 
                     <!-- 작업물 제출 -->

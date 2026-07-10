@@ -15,10 +15,16 @@
             <a th:href="@{/order/worklist}" class="role-filter-tab"
                 th:classappend="${roleFilter == null or roleFilter == 'all'} ? ' active' : ''">전체</a>
             <a th:href="@{/order/worklist(role='writer')}" class="role-filter-tab"
-                th:classappend="${roleFilter == 'writer'} ? ' active' : ''">작업중</a>
+                th:classappend="${roleFilter == 'writer'} ? ' active' : ''">맡은 작업</a>
             <a th:href="@{/order/worklist(role='buyer')}" class="role-filter-tab"
-                th:classappend="${roleFilter == 'buyer'} ? ' active' : ''">의뢰중</a>
+                th:classappend="${roleFilter == 'buyer'} ? ' active' : ''">요청한 작업</a>
+            <a th:href="@{/order/worklist(role=${roleFilter}, hideCompleted=${!hideCompleted})}" class="role-filter-tab"
+                th:classappend="${hideCompleted} ? ' active' : ''" style="margin-left:auto;">
+                완료된 작업 숨기기
+            </a>
         </div>
+
+
 
         <div class="board-grid">
             <div th:each="order : ${workList}" class="board-card"

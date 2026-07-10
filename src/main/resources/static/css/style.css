@@ -1,5 +1,5 @@
 /* ============================================================
-   0. COMMON — 리셋 / 헤더 / 푸터 / 공통 버튼
+   0. COMMON — 리셋 / 헤더 / 푸터 / 공통 버튼 / 공통 아바타 / 안내박스
    ============================================================ */
 
 /* --- 기본 리셋 --- */
@@ -46,7 +46,6 @@ a {
     font-size: 1.3rem;
     font-weight: 800;
     color: #2563eb;
-    /* 파란색 포인트 */
 }
 
 .search-form {
@@ -119,7 +118,6 @@ a {
     border-radius: 5px;
 }
 
-/* 드롭다운 안의 a태그 및 로그아웃 버튼 */
 .dropdown-menu a,
 .dropdown-menu .logout-btn {
     display: block;
@@ -139,12 +137,10 @@ a {
     background-color: #ddd;
 }
 
-/* JS로 활성화될 때 보여줌 */
 .show {
     display: block;
 }
 
-/* 로그아웃 */
 .logout-form {
     display: flex;
     align-items: center;
@@ -181,7 +177,7 @@ a {
     color: #888;
 }
 
-/* --- 공통 버튼 (여러 페이지에서 재사용) --- */
+/* --- 공통 버튼 --- */
 .btn-primary {
     width: 100%;
     padding: 12px;
@@ -252,19 +248,27 @@ a {
 .action-btn-row .btn-primary,
 .action-btn-row .btn-sub {
     width: 100%;
-    /* form 안에서는 100%로 채우되 */
     margin-top: 0;
-    /* 위쪽 여백 제거 */
 }
 
-/* 금액 조절 버튼 없애기 (크롬, 사파리, 엣지) */
+/* 신청 취소처럼 좁게 유지해야 하는 버튼용 */
+.action-btn-row form.btn-sub-form {
+    flex: 0 0 auto;
+}
+
+.action-btn-row form.btn-sub-form .btn-sub {
+    width: auto;
+    white-space: nowrap;
+    padding: 12px 16px;
+}
+
 input[type="number"]::-webkit-outer-spin-button,
 input[type="number"]::-webkit-inner-spin-button {
     -webkit-appearance: none;
     margin: 0;
 }
 
-/* --- 공통: 프로필 원형 아바타 (여러 페이지 공용) --- */
+/* --- 공통: 프로필 원형 아바타 --- */
 .chat-profile-img,
 .info-profile-img {
     width: 24px;
@@ -293,7 +297,7 @@ input[type="number"]::-webkit-inner-spin-button {
     font-weight: 700;
 }
 
-/* --- 공통: 시스템 안내 박스 (카드형 알림) --- */
+/* --- 공통: 시스템 안내 박스 --- */
 .system-notice-box {
     display: flex;
     flex-direction: column;
@@ -339,14 +343,230 @@ input[type="number"]::-webkit-inner-spin-button {
     background-color: #6d28d9;
 }
 
+.action-btn-row .btn-notice-action {
+    width: 100%;
+    white-space: nowrap;
+}
+
+/* --- 공통: 팝업(모달) --- */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-box {
+    background: #fff;
+    border-radius: 12px;
+    padding: 32px 28px;
+    max-width: 360px;
+    width: 90%;
+    text-align: center;
+}
+
+.modal-box h3 {
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+}
+
+.modal-box p {
+    color: #64748b;
+    margin-bottom: 20px;
+}
+
+.modal-btn-row {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* --- 공통: 해시태그 알약 --- */
+.hashtag-item {
+    padding: 6px 14px;
+    background-color: #f3f4f6;
+    color: #374151;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    text-decoration: none;
+    transition: all 0.2s;
+    border: 1px solid #e5e7eb;
+}
+
+.hashtag-item:hover {
+    background-color: #7c3bed;
+    color: white;
+    border-color: #7c3bed;
+}
+
+.hashtag-item.small {
+    padding: 3px 8px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+}
+
+.hashtag-item.active {
+    background-color: #7c3bed;
+    color: #ffffff;
+    border-color: #7c3aed;
+}
+
+
+.hashtag-clear:hover {
+    background-color: #fee2e2;
+}
+
+/* --- 공통: 첨부파일 목록 / 업로드 전 미리보기 --- */
+.file-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 0;
+    font-size: 0.75rem;
+}
+
+.file-item a {
+    color: #7c3aed;
+    text-decoration: none;
+}
+
+.file-item a:hover {
+    text-decoration: underline;
+}
+
+.file-icon {
+    font-size: 0.8rem;
+}
+
+.file-preview-list {
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.file-preview-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 0.85rem;
+}
+
+.file-preview-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 260px;
+}
+
+.file-preview-remove {
+    background: none;
+    border: none;
+    color: #94a3b8;
+    font-size: 1.1rem;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0 4px;
+}
+
+.file-preview-remove:hover {
+    color: #dc2626;
+}
+
 
 /* ============================================================
-   1. ACCOUNT — 회원가입 / 내 정보
+   1. ACCOUNT — 회원가입 / 내 정보 / 공개 프로필(+슬롯)
    ============================================================ */
 
-/* account/register : 별도 커스텀 스타일 없음, 공통 form-group 사용 */
+/* account/register + auth/login : 별도 커스텀 스타일 없음, 공통 form-group 사용 */
+.auth-page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #f8fafc;
+    padding: 40px 20px;
+}
 
-/* account/myinfo : 내 정보 수정 */
+.auth-logo {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: #2563eb;
+    margin-bottom: 28px;
+}
+
+.auth-card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 40px 36px;
+    max-width: 400px;
+    width: 100%;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.auth-title {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: #1e293b;
+    text-align: center;
+    margin-bottom: 6px;
+}
+
+.auth-subtitle {
+    font-size: 0.88rem;
+    color: #94a3b8;
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.auth-alert {
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    margin-bottom: 16px;
+    text-align: center;
+}
+
+.auth-alert-error {
+    background: #fef2f2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+}
+
+.auth-alert-info {
+    background: #eff6ff;
+    color: #2563eb;
+    border: 1px solid #bfdbfe;
+}
+
+.auth-switch {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 0.88rem;
+    color: #64748b;
+}
+
+.auth-switch a {
+    color: #7c3aed;
+    font-weight: 700;
+    text-decoration: underline;
+}
+
+
+
+/* --- account/myinfo : 내 정보 수정 --- */
 .profile-image-wrap {
     display: flex;
     justify-content: center;
@@ -374,9 +594,7 @@ input[type="number"]::-webkit-inner-spin-button {
     font-weight: 700;
 }
 
-
-/* account/profile : 프로필 */
-
+/* --- account/profile : 공개 프로필 헤더 --- */
 .profile-header-card {
     display: flex;
     align-items: center;
@@ -425,6 +643,34 @@ input[type="number"]::-webkit-inner-spin-button {
     color: #64748b;
 }
 
+/* --- account/profile : 슬롯 현황/설정 --- */
+.slot-box-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 10px 0;
+}
+
+.slot-box {
+    width: 22px;
+    height: 22px;
+    border: 2px solid #cbd5e1;
+    border-radius: 4px;
+    background: #ffffff;
+}
+
+.slot-box.filled {
+    background: #7c3aed;
+    border-color: #7c3aed;
+}
+
+.slot-info-text {
+    font-size: 0.85rem;
+    color: #64748b;
+    margin: 8px 0 14px;
+}
+
+/* --- account/profile : 작성한 게시글 목록 --- */
 .profile-board-item {
     display: flex;
     align-items: center;
@@ -497,38 +743,11 @@ input[type="number"]::-webkit-inner-spin-button {
 }
 
 
-/*account/profile 슬롯*/
-.slot-box-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin: 10px 0;
-}
-
-.slot-box {
-    width: 22px;
-    height: 22px;
-    border: 2px solid #cbd5e1;
-    border-radius: 4px;
-    background: #ffffff;
-}
-
-.slot-box.filled {
-    background: #7c3aed;
-    border-color: #7c3aed;
-}
-
-.slot-info-text {
-    font-size: 0.85rem;
-    color: #64748b;
-    margin: 8px 0 14px;
-}
-
 /* ============================================================
    2. BOARD — 게시글 목록 / 상세
    ============================================================ */
 
-/* --- board/list : 검색창 (헤더 검색창과 충돌 방지) --- */
+/* --- board/list : 검색창 --- */
 .search-wrap {
     display: flex;
     justify-content: center;
@@ -636,7 +855,55 @@ input[type="number"]::-webkit-inner-spin-button {
     background-color: transparent !important;
 }
 
+/* --- board/list 드롭다운 --- */
+.sort-select {
+    padding: 8px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    color: #374151;
+    background: #ffffff;
+    cursor: pointer;
+}
+
+/* --- board/list : 인기 해시태그 --- */
+.popular-hashtags-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 20px;
+    margin-bottom: 40px;
+    gap: 10px;
+}
+
+.hashtag-title {
+    font-size: 0.9rem;
+    color: #6b7280;
+    font-weight: 600;
+}
+
+.hashtag-list {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+}
+
 /* --- board/list : 상단바 + 카드 그리드 --- */
+
+.closed-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: rgba(63, 62, 62, 0.7);
+    color: #fff;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    z-index: 2;
+}
+
 .board-top-bar {
     display: flex;
     justify-content: space-between;
@@ -739,31 +1006,8 @@ input[type="number"]::-webkit-inner-spin-button {
 .hashtag {
     display: flex;
     flex-wrap: wrap;
-    /* justify-content: flex-end; */
     gap: 4px;
     margin-bottom: 14px;
-}
-
-.hashtag-item.small {
-    padding: 3px 8px;
-    font-size: 0.75rem;
-    white-space: nowrap;
-}
-
-.hashtag-item.active {
-    background-color: #7c3aed;
-    color: #ffffff;
-    border-color: #7c3aed;
-}
-
-.hashtag-clear {
-    background-color: #fef2f2;
-    color: #dc2626;
-    border-color: #fecaca;
-}
-
-.hashtag-clear:hover {
-    background-color: #fee2e2;
 }
 
 .writer {
@@ -809,7 +1053,73 @@ input[type="number"]::-webkit-inner-spin-button {
     font-weight: bold;
 }
 
-/* --- board/detail : 이미지 --- */
+/* --- board/detail : 작성자 프로필 카드 --- */
+.writer-card-link {
+    display: block;
+    text-decoration: none;
+    max-width: 720px;
+    margin: 0 auto 16px;
+}
+
+.writer-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 16px 20px;
+    transition: box-shadow 0.15s ease;
+}
+
+.writer-card-link:hover .writer-card {
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+}
+
+.writer-card-img {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.writer-card-placeholder {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #7c3aed;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.writer-card-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.writer-card-nickname {
+    font-weight: 700;
+    font-size: 1rem;
+    color: #1e293b;
+}
+
+.writer-card-stat {
+    font-size: 0.85rem;
+    color: #64748b;
+}
+
+.writer-card-stat strong {
+    color: #7c3aed;
+}
+
+/* --- board/detail : 첨부 이미지/영상 갤러리 (캐러셀) --- */
 .gallery-card {
     position: relative;
     max-width: 720px;
@@ -897,50 +1207,8 @@ input[type="number"]::-webkit-inner-spin-button {
     background: #ffffff;
 }
 
-
-
-
-/* --- board/detail : 인기 해시태그 --- */
-.popular-hashtags-wrap {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin-top: 20px;
-    margin-bottom: 40px;
-    gap: 10px;
-}
-
-.hashtag-title {
-    font-size: 0.9rem;
-    color: #6b7280;
-    font-weight: 600;
-}
-
-.hashtag-list {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 8px;
-}
-
-.hashtag-item {
-    padding: 6px 14px;
-    background-color: #f3f4f6;
-    color: #374151;
-    border-radius: 20px;
-    font-size: 0.85rem;
-    text-decoration: none;
-    transition: all 0.2s;
-    border: 1px solid #e5e7eb;
-}
-
-.hashtag-item:hover {
-    background-color: #2563eb;
-    color: white;
-    border-color: #2563eb;
-}
-
 /* --- board/detail : 상세 카드 --- */
+
 .detail-card {
     background: #ffffff;
     border: 1px solid #e5e7eb;
@@ -956,81 +1224,11 @@ input[type="number"]::-webkit-inner-spin-button {
     margin-bottom: 28px;
 }
 
-.writer-card-link {
-    display: block;
-    text-decoration: none;
-    max-width: 720px;
-    margin: 0 auto 16px;
-}
-
-.writer-card {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    background: #ffffff;
-    border: 1px solid #e5e7eb;
-    border-radius: 12px;
-    padding: 16px 20px;
-    transition: box-shadow 0.15s ease;
-}
-
-.writer-card-link:hover .writer-card {
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
-}
-
-.writer-card-img {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    object-fit: cover;
-    flex-shrink: 0;
-}
-
-.writer-card-placeholder {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    background: #7c3aed;
-    color: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.2rem;
-    font-weight: 700;
-    flex-shrink: 0;
-}
-
-.writer-card-info {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.writer-card-nickname {
-    font-weight: 700;
-    font-size: 1rem;
-    color: #1e293b;
-}
-
-.writer-card-stat {
-    font-size: 0.85rem;
-    color: #64748b;
-}
-
-.writer-card-stat strong {
-    color: #7c3aed;
-}
-
 .detail-hashtag-list {
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
     margin-top: 10px;
-}
-
-.hashtag-item.small {
-    padding: 3px 8px;
-    font-size: 0.75rem;
 }
 
 .category-badge {
@@ -1086,6 +1284,7 @@ input[type="number"]::-webkit-inner-spin-button {
     display: flex;
     gap: 15px;
     margin-top: 20px;
+    align-items: center;
 }
 
 .btn-blue {
@@ -1114,6 +1313,147 @@ input[type="number"]::-webkit-inner-spin-button {
     background-color: #e2e8f0;
 }
 
+/* board/detail 신청 버튼 비활성화 */
+.tooltip-wrap {
+    position: relative;
+    display: inline-flex;
+}
+
+.tooltip-text {
+    position: absolute;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1e293b;
+    color: #fff;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.15s ease;
+    z-index: 10;
+}
+
+.tooltip-text::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: #1e293b;
+}
+
+.tooltip-wrap:hover .tooltip-text {
+    opacity: 1;
+    visibility: visible;
+}
+
+.closed-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: rgba(0, 0, 0, 0.7);
+    color: #fff;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    z-index: 2;
+}
+
+.btn-disabled-link {
+    background-color: #cbd5e1 !important;
+    color: #64748b !important;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+
+/* order/detail 리뷰목록 */
+.review-list-card {
+    max-width: 720px;
+    margin: 24px auto 0;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 24px 28px;
+}
+
+.review-list-card h4 {
+    font-size: 1.05rem;
+    color: #1e293b;
+    margin-bottom: 16px;
+}
+
+.review-item {
+    padding: 14px 0;
+    border-top: 1px solid #f1f5f9;
+}
+
+.review-item:first-of-type {
+    border-top: none;
+}
+
+.review-item-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.review-profile-img {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.review-profile-placeholder {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #7c3aed;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.review-nickname {
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: #1e293b;
+}
+
+.review-stars {
+    color: #f59e0b;
+    font-size: 0.85rem;
+}
+
+.review-date {
+    margin-left: auto;
+    font-size: 0.78rem;
+    color: #94a3b8;
+}
+
+.review-content {
+    font-size: 0.9rem;
+    color: #475569;
+    line-height: 1.6;
+    white-space: pre-wrap;
+}
+
+/* board/list 구해요란 구분선 */
+.request-section {
+    margin-top: 40px;
+    padding-top: 30px;
+    border-top: 2px solid #f1f5f9;
+}
 
 /* ============================================================
    3. ORDER — 폼 공통 (create, info 등에서 재사용)
@@ -1136,6 +1476,7 @@ input[type="number"]::-webkit-inner-spin-button {
 .form-group input[type="number"],
 .form-group input[type="date"],
 .form-group input[type="email"],
+.form-group input[type="password"],
 .form-group select,
 .form-group textarea {
     width: 100%;
@@ -1161,7 +1502,7 @@ input[type="number"]::-webkit-inner-spin-button {
 
 
 /* ============================================================
-   4. ORDER/CREATE — 의뢰 신청 폼
+   4. ORDER/CREATE — 의뢰 신청 폼 (리뷰 등록 폼도 동일 스타일 재사용)
    ============================================================ */
 
 .form-card {
@@ -1229,6 +1570,7 @@ input[type="number"]::-webkit-inner-spin-button {
     font-size: 1rem;
     font-weight: 700;
     cursor: pointer;
+    margin-bottom: 10px;
 }
 
 .btn-submit-action:hover {
@@ -1260,51 +1602,121 @@ input[type="number"]::-webkit-inner-spin-button {
 
 
 /* ============================================================
-   5. ORDER/INFO — 의뢰서 상세 / 수락 / 타임라인
+   5. ORDER/INFO — 의뢰서 상세 / 수락 / 환불 / 타임라인
    ============================================================ */
 
-/* --- 팝업 ---*/
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
+/* --- 원본 게시글 카드 --- */
+.board-link-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    overflow: hidden;
+    max-width: 600px;
+    margin: 20px auto 0;
+    text-decoration: none;
+    transition: box-shadow 0.15s ease;
+}
+
+.board-link-card:hover {
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+}
+
+.board-link-thumb {
+    position: relative;
+    width: 90px;
+    height: 90px;
+    flex-shrink: 0;
+    background: #f1f5f9;
+}
+
+.board-link-thumb img {
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.5);
+    object-fit: cover;
+}
+
+.board-link-noimg {
+    width: 100%;
+    height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 1000;
+    color: #94a3b8;
+    font-size: 0.8rem;
 }
 
-.modal-box {
-    background: #fff;
-    border-radius: 12px;
-    padding: 32px 28px;
-    max-width: 360px;
-    width: 90%;
-    text-align: center;
+.board-link-info {
+    flex: 1;
+    padding: 12px 14px 12px 0;
+    min-width: 0;
 }
 
-.modal-box h3 {
-    font-size: 1.2rem;
-    margin-bottom: 10px;
+.board-link-title {
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.modal-box p {
-    color: #64748b;
-    margin-bottom: 20px;
+.board-link-price {
+    color: #7c3aed;
+    font-weight: 800;
+    font-size: 0.95rem;
 }
 
-.modal-btn-row {
+.board-link-card {
     display: flex;
-    flex-direction: column;
-    gap: 8px;
+    align-items: center;
+    gap: 12px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 14px 18px;
+    max-width: 600px;
+    margin: 20px auto 0;
+    text-decoration: none;
+    transition: box-shadow 0.15s ease;
+}
+
+.board-link-card:hover {
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+}
+
+.board-link-icon {
+    font-size: 1.3rem;
+}
+
+.board-link-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.board-link-label {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    margin-bottom: 2px;
+}
+
+.board-link-title {
+    font-weight: 600;
+    color: #1e293b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.board-link-arrow {
+    font-size: 1.3rem;
+    color: #cbd5e1;
 }
 
 
-
-/* --- 카드 레이아웃 (info, info-request 공용) --- */
+/* --- 카드 레이아웃 --- */
 .info-card {
     background: #ffffff;
     border-radius: 12px;
@@ -1375,7 +1787,7 @@ input[type="number"]::-webkit-inner-spin-button {
     white-space: pre-wrap;
 }
 
-/* 액션 섹션 (결제요청/거절, 결제하기/취소, 제출 폼 등) */
+/* 액션 섹션 (결제요청/거절, 결제하기/취소, 제출 폼, 환불 요청/동의/거절 등) */
 .action-section {
     margin-top: 25px;
     padding-top: 20px;
@@ -1505,72 +1917,32 @@ input[type="number"]::-webkit-inner-spin-button {
     margin-top: 6px;
 }
 
-/* --- 첨부파일 (제출된 파일 목록 / 업로드 전 미리보기) --- */
-.file-item {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    padding: 3px 0;
-    font-size: 0.75rem;
-}
-
-.file-item a {
-    color: #7c3aed;
-    text-decoration: none;
-}
-
-.file-item a:hover {
-    text-decoration: underline;
-}
-
-.file-icon {
-    font-size: 0.8rem;
-}
-
-.file-preview-list {
-    margin-top: 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-.file-preview-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 8px 12px;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    font-size: 0.85rem;
-}
-
-.file-preview-name {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    max-width: 260px;
-}
-
-.file-preview-remove {
-    background: none;
-    border: none;
-    color: #94a3b8;
-    font-size: 1.1rem;
-    cursor: pointer;
-    line-height: 1;
-    padding: 0 4px;
-}
-
-.file-preview-remove:hover {
-    color: #dc2626;
-}
-
 
 /* ============================================================
-   6. ORDER/LIST — 내 채팅방(주문) 목록
+   6. ORDER/LIST & ORDER/WORKLIST — 채팅창 목록 / 작업 목록
    ============================================================ */
 
+/* --- 상단 탭: 채팅창 목록 <-> 작업 목록 --- */
+.order-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.order-tab {
+    padding: 10px 16px;
+    font-weight: 600;
+    color: #94a3b8;
+    border-bottom: 2px solid transparent;
+}
+
+.order-tab.active {
+    color: #7c3aed;
+    border-bottom-color: #7c3aed;
+}
+
+/* --- 작업 목록 역할 필터(전체/작업자/의뢰인) --- */
 .role-filter-tabs {
     display: flex;
     gap: 8px;
@@ -1593,24 +1965,41 @@ input[type="number"]::-webkit-inner-spin-button {
     border-color: #7c3aed;
 }
 
-
-.order-tabs {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 20px;
-    border-bottom: 1px solid #e2e8f0;
+/* --- order/worklist : 카드 위 상태 뱃지 (board-card 재사용) --- */
+.order-status-badge.status-request {
+    background: #f57a29;
 }
 
-.order-tab {
-    padding: 10px 16px;
-    font-weight: 600;
-    color: #94a3b8;
-    border-bottom: 2px solid transparent;
+.order-status-badge.status-payment_waiting {
+    background: #407af8;
 }
 
-.order-tab.active {
-    color: #7c3aed;
-    border-bottom-color: #7c3aed;
+.order-status-badge.status-processing {
+    background: #16a34a;
+}
+
+.order-status-badge.status-submitted {
+    background: #9333ea;
+}
+
+.order-status-badge.status-revision_requested {
+    background: #d97706;
+}
+
+.order-status-badge.status-refund_requested {
+    background: #d97706;
+}
+
+.order-status-badge.status-refunded {
+    background: #6b7280;
+}
+
+.order-status-badge.status-completed {
+    background: #0891b2;
+}
+
+.order-status-badge.status-canceled {
+    background: #6b7280;
 }
 
 .order-status-badge {
@@ -1626,7 +2015,7 @@ input[type="number"]::-webkit-inner-spin-button {
     z-index: 2;
 }
 
-
+/* --- order/list : 채팅방 목록 --- */
 .chat-list {
     display: flex;
     flex-direction: column;
@@ -1712,7 +2101,6 @@ input[type="number"]::-webkit-inner-spin-button {
     margin-bottom: 6px;
 }
 
-
 .bubble {
     padding: 10px 14px;
     border-radius: 12px;
@@ -1720,7 +2108,6 @@ input[type="number"]::-webkit-inner-spin-button {
     line-height: 1.5;
     word-break: break-all;
 }
-
 
 .bubble-box {
     display: flex;
@@ -1740,6 +2127,7 @@ input[type="number"]::-webkit-inner-spin-button {
     color: #111827;
 }
 
+/* --- 시스템 카드 (버블 안에 들어가는 결제요청/완료/취소/환불 등) --- */
 .bubble-card {
     background-color: #ffffff;
     border: 1px solid #e2e8f0;
@@ -1755,7 +2143,7 @@ input[type="number"]::-webkit-inner-spin-button {
 }
 
 .bubble-card.cancel-card {
-    border-color: #fca5a5;
+    border-color: #a77474;
 }
 
 .bubble-card.revision-card {
@@ -1769,72 +2157,6 @@ input[type="number"]::-webkit-inner-spin-button {
     flex-shrink: 0;
 }
 
-/* --- 입력 바 --- */
-.send-bar {
-    display: flex;
-    gap: 10px;
-    margin-top: 12px;
-    align-items: center;
-}
-
-.input-wrap {
-    flex: 1;
-    background: #ffffff;
-    border: 1px solid #d1d5db;
-    border-radius: 20px;
-    padding: 6px 18px;
-    display: flex;
-}
-
-.input-wrap input {
-    width: 100%;
-    border: none;
-    outline: none;
-    font-size: 0.95rem;
-}
-
-.btn-send {
-    width: 42px;
-    height: 42px;
-    background-color: #7c3aed;
-    color: #ffffff;
-    border: none;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    flex-shrink: 0;
-}
-
-.btn-send:hover {
-    background-color: #6d28d9;
-
-}
-
-.btn-attach {
-    background: none;
-    border: none;
-    font-size: 1.2rem;
-    cursor: pointer;
-    flex-shrink: 0;
-    padding: 0 4px;
-}
-
-.chat-attach-list {
-    margin-top: 6px;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-.chat-attach-img,
-.chat-attach-video {
-    max-width: 220px;
-    border-radius: 8px;
-}
-
-/* --- 시스템 카드 (결제요청 / 완료 / 취소 등) --- */
 .pay-card-wrap {
     width: 100%;
 }
@@ -1892,7 +2214,7 @@ input[type="number"]::-webkit-inner-spin-button {
 }
 
 .cancel-card-text {
-    color: #dc2626;
+    color: #412d2d;
     margin-bottom: 6px;
 }
 
@@ -1901,3 +2223,77 @@ input[type="number"]::-webkit-inner-spin-button {
     color: #aaaaaa;
     margin-bottom: 0;
 }
+
+/* --- 입력 바 --- */
+.send-bar {
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+    align-items: center;
+}
+
+.input-wrap {
+    flex: 1;
+    background: #ffffff;
+    border: 1px solid #d1d5db;
+    border-radius: 20px;
+    padding: 6px 18px;
+    display: flex;
+}
+
+.input-wrap input {
+    width: 100%;
+    border: none;
+    outline: none;
+    font-size: 0.95rem;
+}
+
+.btn-send {
+    width: 42px;
+    height: 42px;
+    background-color: #7c3aed;
+    color: #ffffff;
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.btn-send:hover {
+    background-color: #6d28d9;
+}
+
+.btn-attach {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    flex-shrink: 0;
+    padding: 0 4px;
+}
+
+.chat-attach-list {
+    margin-top: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.chat-attach-img,
+.chat-attach-video {
+    max-width: 220px;
+    border-radius: 8px;
+}
+
+
+/* ============================================================
+   8. REVIEW — 리뷰 (register.html은 4번 ORDER/CREATE 스타일 재사용)
+   ============================================================ */
+
+/* 아직 리뷰 전용 커스텀 스타일 없음.
+   review/register.html은 .form-card, .form-group, .btn-submit-action 등을
+   4. ORDER/CREATE 섹션 스타일 그대로 재사용하고 있음.
+   추후 리뷰 목록/평점 표시 UI를 만들 때 이 섹션에 추가할 것. */

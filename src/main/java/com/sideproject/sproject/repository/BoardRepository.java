@@ -53,4 +53,22 @@ public interface BoardRepository extends JpaRepository<Board, Long> {
        // 인기 해시태그
        @Query("SELECT b.hashtag FROM Board b WHERE b.hashtag IS NOT NULL AND b.hashtag != ''")
        List<String> findAllHashtagStrings();
+
+       // 인기순 정렬
+       @Query(value = "SELECT b.* FROM board b " +
+                     "LEFT JOIN (SELECT board_id, COUNT(*) AS cnt FROM order_request " +
+                     "WHERE order_status = 'COMPLETED' GROUP BY board_id) o " +
+                     "ON b.board_id = o.board_id " +
+                     "ORDER BY COALESCE(o.cnt, 0) DESC, b.board_id DESC", countQuery = "SELECT COUNT(*) FROM board", nativeQuery = true)
+       Page<Board> findAllOrderByCompletedCount(Pageable pageable);
+
+       // 구해요 제외 쿼리
+       Page<Board> findByCategoryNot(String category, Pageable pageable);
+
+       @Query("SELECT b FROM Board b WHERE b.category != :category AND " +
+                     "(b.title LIKE %:keyword% OR b.content LIKE %:keyword% OR b.hashtag LIKE %:keyword%)")
+       Page<Board> searchByKeywordExcludingCategory(@Param("category") String category,
+                     @Param("keyword") String keyword,
+                     Pageable pageable);
+
 }

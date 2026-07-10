@@ -4,21 +4,11 @@ import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 import com.sideproject.sproject.dto.BoardDTO;
 import com.sideproject.sproject.dto.BoardFileDTO;
-import com.sideproject.sproject.dto.OrderDTO;
 import com.sideproject.sproject.entity.Account;
 import com.sideproject.sproject.entity.Board;
 import com.sideproject.sproject.entity.BoardFile;
-import com.sideproject.sproject.entity.ChatRoom;
-import com.sideproject.sproject.entity.Order;
-import com.sideproject.sproject.entity.OrderMessage;
 import com.sideproject.sproject.repository.BoardFileRepository;
 import com.sideproject.sproject.repository.BoardRepository;
-import com.sideproject.sproject.repository.ChatRoomRepository;
-
-import com.sideproject.sproject.repository.OrderMessageRepository;
-import com.sideproject.sproject.repository.OrderRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Pageable;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -26,20 +16,20 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.List;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class BoardService {
 
-    private final OrderMessageRepository orderMessageRepository;
-    private final OrderRepository orderRepository;
     private final BoardRepository boardRepository;
-    private final ChatRoomRepository chatRoomRepository;
     private final BoardFileRepository boardFileRepository;
     private final Cloudinary cloudinary;
 
@@ -121,14 +111,17 @@ public class BoardService {
 
     // 전체 게시글 조회(페이징 처리)
     @Transactional(readOnly = true)
-    public Page<BoardDTO> getBoards(String category, String keyword, String hashtag, Pageable pageable) {
+    public Page<BoardDTO> getBoards(String category, String keyword, String hashtag, String sortBy, Pageable pageable) {
         boolean hasCategory = category != null && !category.isEmpty();
         boolean hasKeyword = keyword != null && !keyword.isEmpty();
         boolean hasHashtag = hashtag != null && !hashtag.isEmpty();
 
         Page<Board> boards;
 
-        if (hasCategory && hasKeyword && hasHashtag) {
+        if ("popular".equals(sortBy) && !hasCategory && !hasKeyword && !hasHashtag) {
+            Pageable unsortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize());
+            boards = boardRepository.findAllOrderByCompletedCount(unsortedPageable);
+        } else if (hasCategory && hasKeyword && hasHashtag) {
             boards = boardRepository.searchByCategoryAndKeywordAndHashtag(category, keyword, hashtag, pageable);
         } else if (hasCategory && hasHashtag) {
             boards = boardRepository.findByCategoryAndHashtagContaining(category, hashtag, pageable);
@@ -141,12 +134,18 @@ public class BoardService {
         } else if (hasCategory) {
             boards = boardRepository.findByCategory(category, pageable);
         } else if (hasKeyword) {
-            boards = boardRepository.searchByKeyword(keyword, pageable);
+            boards = boardRepository.searchByKeywordExcludingCategory("구해요", keyword, pageable);
         } else {
-            boards = boardRepository.findAll(pageable);
+            boards = boardRepository.findByCategoryNot("구해요", pageable);
         }
 
         return boards.map(this::toDTO);
+    }
+
+    // 구해요 전용 목록 (페이징 없이 최신순으로 간단히)
+    public Page<BoardDTO> getRequestBoards(Pageable pageable) {
+        return boardRepository.findByCategory("구해요", pageable)
+                .map(this::toDTO);
     }
 
     // 게시글 상세 조회

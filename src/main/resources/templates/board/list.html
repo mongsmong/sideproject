@@ -39,17 +39,12 @@
     <div class="popular-hashtags-wrap">
         <div class="hashtag-title"></div>
         <div class="hashtag-list">
-            <a th:each="tag : ${popularTags}"
-                th:href="@{/board/list(category=${param.category}, keyword=${param.keyword}, hashtag=${tag})}"
+            <a th:each="tag : ${popularTags}" th:href="${selectedHashtag != null and selectedHashtag == tag}
+                ? @{/board/list(category=${param.category}, keyword=${param.keyword})}
+                : @{/board/list(category=${param.category}, keyword=${param.keyword}, hashtag=${tag})}"
                 th:text="'#' + ${tag}"
                 th:classappend="${selectedHashtag != null and selectedHashtag == tag} ? ' active' : ''"
                 class="hashtag-item">
-            </a>
-
-            <!-- 선택 해제 버튼: 해시태그가 선택된 상태일 때만 노출 -->
-            <a th:if="${selectedHashtag != null and !selectedHashtag.isEmpty()}"
-                th:href="@{/board/list(category=${param.category}, keyword=${param.keyword})}"
-                class="hashtag-item hashtag-clear">
             </a>
         </div>
     </div>
@@ -60,7 +55,17 @@
     <main class="container">
         <div class="board-top-bar">
             <h3>의뢰 게시판</h3>
-            <a sec:authorize="hasRole('CLIENT')" th:href="@{/board/register}" class="btn-write">게시글 작성</a>
+            <div style="display:flex; align-items:center; gap:10px;">
+                <select onchange="location.href=this.value" class="sort-select">
+                    <option
+                        th:value="@{/board/list(category=${param.category}, keyword=${param.keyword}, hashtag=${param.hashtag}, sortBy='latest')}"
+                        th:selected="${selectedSort == null or selectedSort == 'latest'}">최신순</option>
+                    <option
+                        th:value="@{/board/list(category=${param.category}, keyword=${param.keyword}, hashtag=${param.hashtag}, sortBy='popular')}"
+                        th:selected="${selectedSort == 'popular'}">인기순</option>
+                </select>
+                <a th:href="@{/board/register}" class="btn-write">+ 글작성</a>
+            </div>
         </div>
 
         <div class="board-grid">
@@ -107,6 +112,53 @@
                     <a th:href="@{/board/list(page=${boards.number + 1})}">다음</a>
                 </li>
             </ul>
+        </div>
+
+
+
+        <!-- 구해요 리스트 -->
+        <div th:if="${requestBoards != null and !requestBoards.isEmpty()}" class="request-section">
+            <div class="board-top-bar">
+                <h3>구해요</h3>
+            </div>
+
+            <div class="board-grid">
+                <a th:each="board : ${requestBoards}" th:href="@{/board/detail/{id}(id=${board.boardId})}"
+                    class="board-card">
+
+                    <div class="card-img">
+                        <img th:if="${board.thumbnailUrl != null}" th:src="${board.thumbnailUrl}" alt="썸네일">
+                        <img th:unless="${board.thumbnailUrl != null}" src="https://placehold.co/300x200?text=No+Image"
+                            alt="썸네일">
+                        <span th:if="${board.postStatus == 'OFF'}" class="closed-badge">마감</span>
+                    </div>
+
+                    <div class="card-info">
+                        <h4 class="title" th:text="${board.title}"></h4>
+
+                        <div class="sub-info">
+                            <span class="price" th:text="${board.basePrice} + '원'"></span>
+                            <span class="category">구해요</span>
+                        </div>
+
+                        <div class="hashtag">
+                            <span th:each="tag : ${#strings.arraySplit(board.hashtag, ' ')}" th:if="${!tag.isEmpty()}"
+                                th:text="'#' + ${tag}" class="hashtag-item small"></span>
+                        </div>
+
+                        <div class="writer" th:text="${board.writerNickname}"></div>
+                    </div>
+                </a>
+            </div>
+            <!-- 전용 페이징 -->
+            <div class="pagination-wrap" th:if="${requestBoards.totalPages > 1}">
+                <ul class="pagination">
+                    <li th:each="i : ${#numbers.sequence(0, requestBoards.totalPages - 1)}">
+                        <a th:href="@{/board/list(category=${param.category}, keyword=${param.keyword}, hashtag=${param.hashtag}, sortBy=${selectedSort}, requestPage=${i})}"
+                            th:text="${i + 1}" th:classappend="${i == requestBoards.number} ? ' active' : ''"></a>
+                    </li>
+                </ul>
+            </div>
         </div>
     </main>
 

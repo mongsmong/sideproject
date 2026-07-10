@@ -15,37 +15,39 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class OrderDTO {
-    
+
     // 1. 주문 기본 정보
-    private Long orderId;       // 주문 ID
+    private Long orderId; // 주문 ID
 
     // 2. 게시글 정보
-    private Long boardId;       // 게시글 ID
-    private String boardTitle;  // 게시글 제목
+    private Long boardId; // 게시글 ID
+    private String boardTitle; // 게시글 제목
     private String boardWriterUsername; // 작성자 ID
-    private String boardWriterProfileImageUrl; // 작성자 프사 
+    private String boardWriterProfileImageUrl; // 작성자 프사
     private String boardWriterNickname; // 작성자 닉네임
     private String orderTitle; // 작업 타이틀
     private Long chatRoomId;
+    private String boardThumbnailUrl;
+    private String boardPostStatus;
+    private Integer boardBasePrice;
 
     // 3. 구매자 정보
-    private Long buyerId;       // 구매자 ID
+    private Long buyerId; // 구매자 ID
     private String buyerNickname; // 구매자 닉네임
-    private String buyerUsername;      // 추가: principal.getName()과 비교할 필드
+    private String buyerUsername; // 추가: principal.getName()과 비교할 필드
     private String buyerProfileImageUrl;
 
-
     // 4. 상세 내용 및 상태
-    private String content;     // 요구사항
+    private String content; // 요구사항
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-    private LocalDate deadline;   // 마감일
-    private Integer totalPrice;   // 최종 금액
-    private String orderStatus;   // 주문 상태
-    private LocalDateTime regDate; // 주문 일시 
+    private LocalDate deadline; // 마감일
+    private Integer totalPrice; // 최종 금액
+    private String orderStatus; // 주문 상태
+    private LocalDateTime regDate; // 주문 일시
     private LocalDateTime lastMessageDate; // 마지막으로 받은 채팅
+    private boolean hasReview; // 해당 작업에 대한 리뷰상태
 
-    
-    // 환불 
+    // 환불
     private String refundRequestedBy; // 환불요청자
 
 }

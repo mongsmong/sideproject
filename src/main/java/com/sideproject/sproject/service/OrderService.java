@@ -4,25 +4,26 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
+import com.sideproject.sproject.common.AccountRole;
 import com.sideproject.sproject.dto.ChatRoomDTO;
 import com.sideproject.sproject.dto.OrderDTO;
 import com.sideproject.sproject.entity.Account;
 import com.sideproject.sproject.entity.Board;
+import com.sideproject.sproject.entity.BoardFile;
 import com.sideproject.sproject.entity.ChatRoom;
 import com.sideproject.sproject.entity.Order;
 import com.sideproject.sproject.entity.OrderFile;
 import com.sideproject.sproject.entity.OrderMessage;
 import com.sideproject.sproject.entity.Payment;
 import com.sideproject.sproject.repository.AccountRepository;
+import com.sideproject.sproject.repository.BoardFileRepository;
 import com.sideproject.sproject.repository.ChatRoomRepository;
 import com.sideproject.sproject.repository.OrderFileRepository;
 import com.sideproject.sproject.repository.OrderMessageRepository;
@@ -40,6 +41,8 @@ public class OrderService {
         private final AccountRepository accountRepository;
         private final OrderFileRepository orderFileRepository;
         private final ChatRoomRepository chatRoomRepository;
+        private final ReviewService reviewService;
+        private final BoardFileRepository boardFileRepository;
 
         @Transactional
         public Long saveOrder(OrderDTO dto, Board board, Account buyer) {
@@ -173,9 +176,9 @@ public class OrderService {
         }
 
         // 작업 목록 role 조회
-        public List<OrderDTO> getWorkList(String username, String role) {
+        public List<OrderDTO> getWorkList(String username, String role, boolean hideCompleted) {
 
-                //  role 파라미터(all/writer/buyer) 조회할 거래 목록을 다르게 
+                // role 파라미터(all/writer/buyer) 조회할 거래 목록을 다르게
                 List<Order> orders;
                 if ("writer".equals(role)) {
                         orders = orderRepository.findAllByWriterUsername(username);
@@ -189,10 +192,12 @@ public class OrderService {
                 List<String> finishedStatuses = List.of("COMPLETED", "REFUNDED", "CANCELED");
 
                 return orders.stream()
-                                .map(this::toDTO) // Order 엔티티 리스트를 화면에서 쓸 OrderDTO 리스트로 변환
+                                .map(this::toDTO)
+                                // Order 엔티티 리스트를 화면에서 쓸 OrderDTO 리스트로 변환
                                 // 3. sorted()에 비교 규칙(Comparator)을 직접 넣어서 정렬
                                 // 자바의 sorted는 (a, b)를 비교해서
                                 // 음수 반환 → a가 앞으로, 양수 반환 → b가 앞으로, 0 → 순서 유지
+                                .filter(dto -> !hideCompleted || !finishedStatuses.contains(dto.getOrderStatus()))
                                 .sorted((a, b) -> {
 
                                         // 3-1. 지금 비교 중인 두 거래가 각각 "끝난 거래"인지 여부를 미리 판단
@@ -489,7 +494,40 @@ public class OrderService {
                 orderMessageRepository.save(msg);
         }
 
+        // 신청 불가
+        public void validateOrderCreation(Board board, Account buyer, String username) {
+                if ("OFF".equals(board.getPostStatus())) {
+                        throw new IllegalStateException("마감된 게시글입니다.");
+                }
+                if (board.getAccount().getUsername().equals(username)) {
+                        throw new IllegalStateException("본인의 게시글에는 신청할 수 없습니다.");
+                }
+                if (buyer.getRole() != AccountRole.ROLE_CLIENT) {
+                        throw new IllegalStateException("신청 권한이 없습니다.");
+                }
+
+                Account writer = board.getAccount();
+                if (writer.getMaxSlots() != null && !writer.isAllowOverbooking()) {
+                        long activeCount = orderRepository.countActiveOrdersByWriter(writer.getAccountId());
+                        if (activeCount >= writer.getMaxSlots()) {
+                                throw new IllegalStateException("작가의 작업 슬롯이 가득 찼습니다.");
+                        }
+                }
+        }
+
         private OrderDTO toDTO(Order order) {
+
+                Board board = order.getBoardId();
+                List<BoardFile> boardFiles = boardFileRepository
+                                .findByBoard_BoardIdOrderByFileIdAsc(board.getBoardId());
+                String thumbnail = boardFiles.stream()
+                                .filter(f -> f.getContentType() != null && f.getContentType().startsWith("image"))
+                                .map(BoardFile::getFilePath)
+                                .findFirst()
+                                .orElse(
+                                                null);
+                boolean hasReviewValue = "COMPLETED".equals(order.getOrderStatus())
+                                && reviewService.hasReview(order.getOrderId());
                 return OrderDTO.builder()
                                 .orderId(order.getOrderId())
                                 .boardId(order.getBoardId().getBoardId())
@@ -497,19 +535,23 @@ public class OrderService {
                                 .orderTitle(order.getOrderTitle() != null ? order.getOrderTitle()
                                                 : order.getBoardId().getTitle())
                                 .boardWriterUsername(order.getBoardId().getAccount().getUsername()) // 판매자
-                                .boardWriterNickname(order.getBoardId().getAccount().getNickname())   // 작성자 닉네임
+                                .boardWriterNickname(order.getBoardId().getAccount().getNickname()) // 작성자 닉네임
                                 .boardWriterProfileImageUrl(order.getBoardId().getAccount().getProfileImageUrl())
                                 .chatRoomId(order.getChatRoom() != null ? order.getChatRoom().getChatRoomId() : null)
                                 .buyerUsername(order.getBuyerId().getUsername()) // 구매자
                                 .buyerNickname(order.getBuyerId().getNickname())
                                 .buyerProfileImageUrl(order.getBuyerId().getProfileImageUrl())
                                 .content(order.getContent())
+                                .hasReview(hasReviewValue)
                                 .deadline(order.getDeadline())
                                 .totalPrice(order.getTotalPrice())
                                 .orderStatus(order.getOrderStatus())
                                 .regDate(order.getRegDate())
                                 .lastMessageDate(orderMessageRepository.findLastMessageDate(order.getOrderId()))
                                 .refundRequestedBy(order.getRefundRequestedBy()) // 환불요청자
+                                .boardThumbnailUrl(thumbnail)
+                                .boardPostStatus(board.getPostStatus())
+                                .boardBasePrice(board.getBasePrice())
                                 .build();
         }
 }

@@ -7,6 +7,19 @@
     <header th:replace="~{fragments/common :: header}"></header>
 
     <main class="container">
+        <a th:href="@{/board/detail/{id}(id=${order.boardId})}" class="board-link-card">
+            <div class="board-link-thumb">
+                <img th:if="${order.boardThumbnailUrl != null}" th:src="${order.boardThumbnailUrl}">
+                <div th:unless="${order.boardThumbnailUrl != null}" class="board-link-noimg">No Image</div>
+                <span th:if="${order.boardPostStatus == 'OFF'}" class="closed-badge">마감</span>
+            </div>
+            <div class="board-link-info">
+                <div class="board-link-title" th:text="${order.boardTitle}"></div>
+                <div class="board-link-price"
+                    th:text="${#numbers.formatInteger(order.boardBasePrice, 0, 'COMMA')} + '원'"></div>
+            </div>
+        </a>
+
         <div class="info-card">
             <div class="info-header">
                 <h3>작업 의뢰서</h3>
@@ -99,7 +112,7 @@
                         </button>
 
                         <form th:action="@{|/order/cancel/${order.orderId}|}" method="post"
-                            onsubmit="return confirm('정말 이 신청을 취소하시겠습니까?');">
+                            onsubmit="return confirm('정말 이 신청을 취소하시겠습니까?');" class="btn-sub-form">
                             <button type="submit" class="btn-sub"
                                 th:disabled="${order.orderStatus.trim().equals('PROCESSING')}"
                                 th:classappend="${order.orderStatus.trim().equals('PROCESSING')} ? 'btn-disabled' : ''">
@@ -235,11 +248,16 @@
                         </div>
                     </div>
 
-                    <div th:if="${isBuyer and order.orderStatus.trim().equals('COMPLETED')}" class="action-section">
+                    <div th:if="${isBuyer and order.orderStatus.trim().equals('COMPLETED') and !order.hasReview}"
+                        class="action-section">
                         <a th:href="@{|/review/register/${order.orderId}|}" class="btn-primary"
                             style="display:block; text-align:center;">
                             리뷰 작성하기
                         </a>
+                    </div>
+                    <div th:if="${isBuyer and order.orderStatus.trim().equals('COMPLETED') and order.hasReview}"
+                        class="action-section">
+                        <p class="notice-text" style="text-align:center; margin-bottom:0;">리뷰를 작성하셨습니다</p>
                     </div>
                 </div>
             </div>
@@ -290,6 +308,7 @@
                 </div>
             </div>
         </div>
+
         <script th:inline="javascript">
             /*<![CDATA[*/
             const showReviewPrompt = /*[[${showReviewPrompt}]]*/ false;
@@ -303,6 +322,34 @@
                 document.getElementById('reviewPromptModal').style.display = 'none';
             }
         </script>
+
+        <!-- 리뷰 에러 팝업 -->
+        <div id="errorModal" class="modal-overlay" style="display:none;">
+            <div class="modal-box">
+                <h3>알림</h3>
+                <p id="errorModalText"></p>
+                <div class="modal-btn-row">
+                    <button type="button" class="btn-sub" onclick="closeErrorModal()">확인</button>
+                </div>
+            </div>
+        </div>
+
+
+        <script th:inline="javascript">
+            /*<![CDATA[*/
+            const errorMsg = /*[[${errorMsg}]]*/ null;
+            /*]]>*/
+
+            if (errorMsg) {
+                document.getElementById('errorModalText').textContent = errorMsg;
+                document.getElementById('errorModal').style.display = 'flex';
+            }
+
+            function closeErrorModal() {
+                document.getElementById('errorModal').style.display = 'none';
+            }
+        </script>
+
 
 
         <script>

@@ -15,4 +15,6 @@ public class OrderFileDTO {
     private Long fileId;
     private String originalName;
     private String filePath;
+    private String contentType;
+
 }

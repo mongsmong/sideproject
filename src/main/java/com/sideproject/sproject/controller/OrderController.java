@@ -25,6 +25,7 @@ import com.sideproject.sproject.entity.Account;
 import com.sideproject.sproject.entity.Board;
 import com.sideproject.sproject.repository.AccountRepository;
 import com.sideproject.sproject.repository.BoardRepository;
+import com.sideproject.sproject.repository.OrderRepository;
 import com.sideproject.sproject.service.BoardService;
 import com.sideproject.sproject.service.OrderService;
 
@@ -39,48 +40,39 @@ public class OrderController {
     private final AccountRepository accountRepository;
     private final BoardService boardService;
     private final OrderMessageService orderMessageService;
+    private final OrderRepository orderRepository;
 
-    // 주문 작성
+    // 주문 작성 폼
     @GetMapping("/create/{boardId}")
-    public String OrderForm(@PathVariable Long boardId, Model model) {
+    public String OrderForm(@PathVariable Long boardId, Model model, Principal principal) {
         BoardDTO boardDTO = boardService.getBoardById(boardId);
+        Board board = boardRepository.findById(boardId)
+                .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다."));
+        Account buyer = accountRepository.findByUsername(principal.getName())
+                .orElseThrow(() -> new IllegalArgumentException("회원 정보를 찾을 수 없습니다."));
+
+        orderService.validateOrderCreation(board, buyer, principal.getName());
+
         model.addAttribute("boardId", boardId);
         model.addAttribute("board", boardDTO);
         return "/order/create";
     }
 
-    // 주문 만들기 (중복 방지 & 소통창 바로 가기)
+    // 주문 만들기
     @PostMapping("/create/{boardId}")
-    public String createOrder(@PathVariable Long boardId, OrderDTO dto, Principal principal,
-            RedirectAttributes redirectAttributes) {
-        // 로그인 사용자 정보 체크
+    public String createOrder(@PathVariable Long boardId, OrderDTO dto, Principal principal) {
         if (principal == null) {
             return "redirect:/auth/login";
         }
-        // System.out.println("프론트에서 넘어온 DTO: " + dto.toString());
 
         Board board = boardRepository.findById(dto.getBoardId())
                 .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다."));
         Account buyer = accountRepository.findByUsername(principal.getName())
                 .orElseThrow(() -> new IllegalArgumentException("회원 정보를 찾을 수 없습니다."));
 
-        if (board.getAccount().getUsername().equals(principal.getName())) {
-            throw new IllegalStateException("본인의 게시글에는 신청할 수 없습니다.");
-        }
-        if (buyer.getRole() != AccountRole.ROLE_CLIENT) {
-            throw new IllegalStateException("신청 권한이 없습니다.");
-        }
-
-        // 4. 저장 및 중복 체크
-
-        try {
-            Long chatRoomId = orderService.saveOrder(dto, board, buyer);
-            return "redirect:/order/detail/" + chatRoomId;
-        } catch (IllegalStateException e) {
-            redirectAttributes.addFlashAttribute("errorMsg", e.getMessage());
-            return "redirect:/board/detail/" + boardId;
-        }
-
+        orderService.validateOrderCreation(board, buyer, principal.getName());
+        Long chatRoomId = orderService.saveOrder(dto, board, buyer);
+        return "redirect:/order/detail/" + chatRoomId;
     }
 
     // 주문 캔슬
@@ -105,23 +97,16 @@ public class OrderController {
         return "/order/list";
     }
 
-
     // 작업내역목록화면
     @GetMapping("/worklist")
     public String workList(@RequestParam(required = false, defaultValue = "all") String role,
+            @RequestParam(required = false, defaultValue = "false") boolean hideCompleted,
             Principal principal, Model model) {
-        List<OrderDTO> workList = orderService.getWorkList(principal.getName(), role);
+        List<OrderDTO> workList = orderService.getWorkList(principal.getName(), role, hideCompleted);
         model.addAttribute("workList", workList);
         model.addAttribute("currentUsername", principal.getName());
         model.addAttribute("roleFilter", role);
-        return "order/worklist";
-    }
-
-    @GetMapping("/worklist")
-    public String workList(Principal principal, Model model) {
-        List<OrderDTO> workList = orderService.getWorkList(principal.getName());
-        model.addAttribute("workList", workList);
-        model.addAttribute("currentUsername", principal.getName());
+        model.addAttribute("hideCompleted", hideCompleted);
         return "order/worklist";
     }
 
@@ -219,7 +204,7 @@ public class OrderController {
 
     @PostMapping("/approve/{orderId}")
     public String approveWork(@PathVariable Long orderId, Principal principal,
-                                RedirectAttributes redirectAttributes) {
+            RedirectAttributes redirectAttributes) {
         orderService.approveWork(orderId, principal.getName());
         redirectAttributes.addFlashAttribute("showReviewPrompt", true);
         return "redirect:/order/info/" + orderId;

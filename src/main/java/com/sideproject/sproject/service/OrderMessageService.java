@@ -3,29 +3,23 @@ package com.sideproject.sproject.service;
 import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.Map;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
-import java.util.Map;
-import java.util.List;
-import java.io.IOException;
-import org.springframework.web.multipart.MultipartFile;
 import com.sideproject.sproject.entity.OrderFile;
 import com.sideproject.sproject.repository.OrderFileRepository;
-import com.cloudinary.Cloudinary;
 import com.sideproject.sproject.dto.OrderFileDTO;
 import com.sideproject.sproject.dto.OrderMessageDTO;
 import com.sideproject.sproject.entity.Account;
 import com.sideproject.sproject.entity.ChatRoom;
 import com.sideproject.sproject.entity.Order;
-import com.sideproject.sproject.entity.OrderFile;
 import com.sideproject.sproject.entity.OrderMessage;
 import com.sideproject.sproject.repository.AccountRepository;
 import com.sideproject.sproject.repository.ChatRoomRepository;
-import com.sideproject.sproject.repository.OrderFileRepository;
 import com.sideproject.sproject.repository.OrderMessageRepository;
 import com.sideproject.sproject.repository.OrderRepository;
 
@@ -139,6 +133,7 @@ public class OrderMessageService {
                                                                 .fileId(f.getFileId())
                                                                 .originalName(f.getOriginalName())
                                                                 .filePath(f.getFilePath())
+                                                                .contentType(f.getContentType())
                                                                 .build())
                                                 .collect(Collectors.toList()))
                                 .build();

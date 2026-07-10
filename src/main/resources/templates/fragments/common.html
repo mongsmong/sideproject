@@ -51,7 +51,7 @@
                             <a th:href="@{/account/mypage/info}">내정보</a>
                             <a th:href="@{/account/profile/{username}(username=${myUsername})}">마이페이지</a>
                             <a th:href="@{/order/list}">의뢰목록</a>
-                            <form th:action="@{/logout}" method="post" class="logout-form-wrap">
+                            <form th:action="@{/auth/logout}" method="post" class="logout-form-wrap">
                                 <button type="submit" class="logout-btn">로그아웃</button>
                             </form>
                         </div>

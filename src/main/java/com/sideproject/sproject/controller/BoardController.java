@@ -2,6 +2,7 @@ package com.sideproject.sproject.controller;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -14,10 +15,12 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.data.domain.Sort;
 import com.sideproject.sproject.dto.BoardDTO;
+import com.sideproject.sproject.dto.ReviewDTO;
 import com.sideproject.sproject.entity.Account;
 import com.sideproject.sproject.repository.AccountRepository;
 import com.sideproject.sproject.repository.OrderRepository;
 import com.sideproject.sproject.service.BoardService;
+import com.sideproject.sproject.service.ReviewService;
 
 import java.io.IOException;
 import java.security.Principal;
@@ -33,6 +36,7 @@ public class BoardController {
     private final BoardService boardService;
     private final AccountRepository accountRepository;
     private final OrderRepository orderRepository;
+    private final ReviewService reviewService;
 
     // 게시글 목록 페이지(데이터 + html)
     @GetMapping("/list")
@@ -40,17 +44,26 @@ public class BoardController {
             @RequestParam(required = false) String category,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String hashtag,
-            @PageableDefault(size = 5, sort = "boardId", direction = Sort.Direction.DESC) Pageable pageable,
+            @RequestParam(required = false, defaultValue = "latest") String sortBy,
+            @RequestParam(required = false, defaultValue = "0") int requestPage,
+            @PageableDefault(size = 6, sort = "boardId", direction = Sort.Direction.DESC) Pageable pageable,
             Model model) {
 
         // category, keyword,pageable 서비스로
-        Page<BoardDTO> boards = boardService.getBoards(category, keyword, hashtag, pageable);
+        Page<BoardDTO> boards = boardService.getBoards(category, keyword, hashtag, sortBy, pageable);
         model.addAttribute("boards", boards);
         model.addAttribute("selectedHashtag", hashtag);
+        model.addAttribute("selectedSort", sortBy);
 
         // 실시간 인기 해시태그
         List<String> popularTags = boardService.getPopularHashtags();
         model.addAttribute("popularTags", popularTags);
+
+        if (category == null || category.isEmpty()) {
+            Pageable requestPageable = PageRequest.of(requestPage, 3, Sort.by(Sort.Direction.DESC, "boardId"));
+            Page<BoardDTO> requestBoards = boardService.getRequestBoards(requestPageable);
+            model.addAttribute("requestBoards", requestBoards);
+        }
 
         return "board/list";
     }
@@ -96,10 +109,20 @@ public class BoardController {
     // 게시글 상세 페이지
     @GetMapping("/detail/{boardId}")
     public String detail(@PathVariable Long boardId, Model model) {
-        BoardDTO board = boardService.getBoardById(boardId);
-        long completedCount = orderRepository.countCompletedOrdersByBoard(boardId);
+        List<ReviewDTO> reviews = reviewService.getReviewsByBoard(boardId);
 
+        BoardDTO board = boardService.getBoardById(boardId);
+
+        Account writer = accountRepository.findByUsername(board.getWriterUsername())
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
+
+        boolean slotFull = writer.getMaxSlots() != null && !writer.isAllowOverbooking()
+                && orderRepository.countActiveOrdersByWriter(writer.getAccountId()) >= writer.getMaxSlots();
+
+        long completedCount = orderRepository.countCompletedOrdersByBoard(boardId); // ← 이 줄 추가
+        model.addAttribute("reviews", reviews);
         model.addAttribute("board", board);
+        model.addAttribute("slotFull", slotFull);
         model.addAttribute("completedCount", completedCount);
 
         return "board/detail";

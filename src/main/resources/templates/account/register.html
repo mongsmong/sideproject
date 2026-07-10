@@ -1,34 +1,43 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <title>회원가입</title>
-</head>
-<body>
-    <div th:if="${msg}" th:text="${msg}" style="color: blue;"></div>
-    
-    <h1>회원가입</h1>
-    <form th:action="@{/account/register}" method="post">
-        <div>
-            <label>아이디:</label>
-            <input type="text" name="username" required>
-        </div>
-        <div>
-            <label>비밀번호:</label>
-            <input type="password" name="password" required>
-        </div>
-        <div>
-            <label>닉네임:</label>
-            <input type="text" name="nickname" required>
-        </div>
-        <div>
-            <label>이메일:</label>
-            <input type="email" name="email" required>
-        </div>
-        <input type="hidden" name="role" value="ROLE_CLIENT">
+<head th:replace="~{fragments/common :: head('회원가입')}"></head>
 
-        <button type="submit">가입하기</button>
-    </form>
-    <a th:href="@{/auth/login}">로그인 페이지로</a>
+<body>
+    <div class="auth-page">
+        <a th:href="@{/board/list}" class="auth-logo">MAIN</a>
+
+        <div class="auth-card">
+            <h2 class="auth-title">회원가입</h2>
+            <p class="auth-subtitle">몇 가지 정보만 입력하면 시작할 수 있어요</p>
+
+            <div th:if="${msg}" class="auth-alert auth-alert-info" th:text="${msg}"></div>
+
+            <form th:action="@{/account/register}" method="post" class="styled-form">
+                <div class="form-group">
+                    <label>아이디</label>
+                    <input type="text" name="username" placeholder="사용하실 아이디를 입력하세요" required>
+                </div>
+                <div class="form-group">
+                    <label>비밀번호</label>
+                    <input type="password" name="password" placeholder="비밀번호를 입력하세요" required>
+                </div>
+                <div class="form-group">
+                    <label>닉네임</label>
+                    <input type="text" name="nickname" placeholder="사용하실 닉네임을 입력하세요" required>
+                </div>
+                <div class="form-group">
+                    <label>이메일</label>
+                    <input type="email" name="email" placeholder="이메일을 입력하세요" required>
+                </div>
+                <input type="hidden" name="role" value="ROLE_CLIENT">
+
+                <button type="submit" class="btn-submit-action">가입하기</button>
+            </form>
+
+            <div class="auth-switch">
+                이미 계정이 있으신가요? <a th:href="@{/auth/login}">로그인</a>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
