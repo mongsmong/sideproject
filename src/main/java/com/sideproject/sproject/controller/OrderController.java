@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import com.sideproject.sproject.common.AccountRole;
 import com.sideproject.sproject.dto.BoardDTO;
 import com.sideproject.sproject.dto.ChatRoomDTO;
 import com.sideproject.sproject.dto.OrderDTO;
@@ -25,7 +24,6 @@ import com.sideproject.sproject.entity.Account;
 import com.sideproject.sproject.entity.Board;
 import com.sideproject.sproject.repository.AccountRepository;
 import com.sideproject.sproject.repository.BoardRepository;
-import com.sideproject.sproject.repository.OrderRepository;
 import com.sideproject.sproject.service.BoardService;
 import com.sideproject.sproject.service.OrderService;
 
@@ -40,7 +38,6 @@ public class OrderController {
     private final AccountRepository accountRepository;
     private final BoardService boardService;
     private final OrderMessageService orderMessageService;
-    private final OrderRepository orderRepository;
 
     // 주문 작성 폼
     @GetMapping("/create/{boardId}")

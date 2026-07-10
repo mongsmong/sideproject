@@ -21,7 +21,6 @@ import com.sideproject.sproject.entity.OrderMessage;
 import com.sideproject.sproject.repository.AccountRepository;
 import com.sideproject.sproject.repository.ChatRoomRepository;
 import com.sideproject.sproject.repository.OrderMessageRepository;
-import com.sideproject.sproject.repository.OrderRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -29,7 +28,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class OrderMessageService {
-        private final OrderRepository orderRepository;
         private final AccountRepository accountRepository;
         private final OrderMessageRepository orderAttachRepository;
         private final OrderFileRepository orderFileRepository;

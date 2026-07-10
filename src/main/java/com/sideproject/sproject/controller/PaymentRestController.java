@@ -1,14 +1,10 @@
 package com.sideproject.sproject.controller;
 
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.sideproject.sproject.dto.PaymentDTO;
-import com.sideproject.sproject.entity.Order;
-import com.sideproject.sproject.entity.Payment;
-import com.sideproject.sproject.repository.OrderRepository;
-import com.sideproject.sproject.repository.PaymentRepository;
+
 import com.sideproject.sproject.service.PaymentService;
 
 import lombok.RequiredArgsConstructor;
@@ -26,9 +22,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 @RequestMapping("payment")
 public class PaymentRestController {
     private final PaymentService paymentService;
-    private final PaymentRepository paymentRepository;
-    private final OrderRepository orderRepository;
-
+  
 
     // 예외처리용
     @ExceptionHandler({ IllegalStateException.class, IllegalArgumentException.class })
